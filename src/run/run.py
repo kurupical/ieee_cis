@@ -9,7 +9,8 @@ from sklearn.metrics import roc_auc_score
 import copy
 from tqdm import tqdm
 import gc
-import dask.dataframe as ddf
+import time
+from src.feature.common import reduce_mem_usage
 
 # hyper parameters
 n_folds = 5
@@ -130,6 +131,8 @@ def learning(df_train, df_test):
     return df_submit, df_pred_train, df_pred_test, df_importance, df_result
 
 
+# print("waiting...")
+# time.sleep(60*60)
 output_dir = "../../output/{}".format(dt.now().strftime("%Y%m%d%H%M%S"))
 os.makedirs(output_dir)
 
