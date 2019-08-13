@@ -4,35 +4,31 @@ import pickle
 from sklearn.decomposition import PCA, TruncatedSVD
 from src.feature.common import reduce_mem_usage
 
-def weekday_basic(df, output_path):
-    print("weekday_basic start output={}".format(output_path))
-    df_result = pd.DataFrame()
-    df_result["TransactionID"] = df["TransactionID"]
+def weekday_basic(df, output_dir):
+    print("weekday_basic start output={}".format(output_dir))
     cols = ["D{}".format(x) for x in range(1, 15 + 1)]
     for col in df[cols]:
+        df_result = pd.DataFrame()
         fe_col = "{}_mod7".format(col)
         nan_idx = df[df[col].isnull()].index
         zero_idx = df[df[col] == 0].index
         df_result[fe_col] = (df[col].round(0) % 7).astype(str)
         df_result[fe_col].iloc[zero_idx] = "zero"
         df_result[fe_col].iloc[nan_idx] = "nan"
-
-    df_result = reduce_mem_usage(df_result, mode="output")
-    df_result.to_feather(output_path)
+        df_result.to_feather("{}/{}.feather".format(output_dir, fe_col))
 
 def aggregate_basic(df, output_path):
     print("aggregate_basic start output={}".format(output_path))
     df_result = pd.DataFrame()
-    df_result["TransactionID"] = df["TransactionID"]
     cols = ["D{}".format(x) for x in range(1, 15 + 1)]
-    df["D_isnan_sum"] = df[cols].replace("nan", np.nan).isnull().sum(axis=1)
-    df["D_iszero_sum"] = df[cols].replace("zero", np.nan).isnull().sum(axis=1)
+    df_result["D_isnan_sum"] = df[cols].replace("nan", np.nan).isnull().sum(axis=1)
+    df_result["D_iszero_sum"] = df[cols].replace("zero", np.nan).isnull().sum(axis=1)
 
-    df["D5-6-7-8_nancount"] = df[["D6", "D7", "D8"]].isnull().sum(axis=1)
-    df["D5-6-7-8_zerocount"] = (df[["D6", "D7", "D8"]] == 0).sum(axis=1)
+    df_result["D5-6-7-8_nancount"] = df[["D6", "D7", "D8"]].isnull().sum(axis=1)
+    df_result["D5-6-7-8_zerocount"] = (df[["D6", "D7", "D8"]] == 0).sum(axis=1)
 
-    df["D12-13-14_zerocount"] = (df[["D12", "D13", "D14"]] == 0).sum(axis=1)
-    df["D12-13-14_zerocount"] = (df[["D12", "D13", "D14"]] == 0).sum(axis=1)
+    df_result["D12-13-14_nancount"] = df[["D12", "D13", "D14"]].isnull().sum(axis=1)
+    df_result["D12-13-14_zerocount"] = (df[["D12", "D13", "D14"]] == 0).sum(axis=1)
 
     df_result = reduce_mem_usage(df_result, mode="output")
     df_result.to_feather(output_path)
@@ -60,9 +56,7 @@ def weekday_decomp(input_path_train, input_path_test, output_path_train, output_
     ohe_test = datemod_ohe(df_test)
 
     df_result_train = pd.DataFrame()
-    df_result_train["TransactionID"] = df_train["TransactionID"]
     df_result_test = pd.DataFrame()
-    df_result_test["TransactionID"] = df_test["TransactionID"]
 
     # PCA
     print("PCA")
@@ -95,12 +89,10 @@ def weekday_decomp(input_path_train, input_path_test, output_path_train, output_
 df_train = pd.read_feather("../../data/original/train_transaction.feather")
 df_test = pd.read_feather("../../data/original/test_transaction.feather")
 
-"""
-weekday_basic(df_train, output_path="../../data/date/weekday_basic_train.feather")
-weekday_basic(df_test, output_path="../../data/date/weekday_basic_test.feather")
+weekday_basic(df_train, output_dir="../../data/date")
+weekday_basic(df_test, output_dir="../../data/date")
 aggregate_basic(df_train, output_path="../../data/date/aggregate_basic_train.feather")
 aggregate_basic(df_test, output_path="../../data/date/aggregate_basic_test.feather")
-"""
 
 weekday_decomp(input_path_train="../../data/date/weekday_basic_train.feather",
                input_path_test="../../data/date/weekday_basic_test.feather",

@@ -11,6 +11,7 @@ from tqdm import tqdm
 import gc
 import time
 from src.feature.common import reduce_mem_usage
+import glob
 
 # hyper parameters
 n_folds = 5
@@ -18,7 +19,7 @@ random_state = 0
 n_loop = 1
 target_col = "isFraud"
 id_col = "TransactionID"
-remove_cols = ["TransactionDT"]
+remove_cols = []
 nrows_train = None # Noneだと全データをロード
 nrows_test = None # Noneだと全データをロード
 is_reduce_memory = True
@@ -29,7 +30,7 @@ params = {'num_leaves': 60,
           'min_child_samples': 200,
           'objective': 'binary',
           'max_depth': 10,
-          'learning_rate': 0.01,
+          'learning_rate': 0.2,
           "boosting_type": "gbdt",
           "subsample": 0.5,
           "bagging_seed": 11,
@@ -132,35 +133,62 @@ def learning(df_train, df_test):
 
 
 # print("waiting...")
-# time.sleep(60*60)
+# time.sleep(60*60*3)
 output_dir = "../../output/{}".format(dt.now().strftime("%Y%m%d%H%M%S"))
 os.makedirs(output_dir)
 
-df_submit = pd.DataFrame()
+df_submit = pd.read_csv("../../data/original/sample_submission.csv")
 df_pred_train = pd.DataFrame()
 df_pred_test = pd.DataFrame()
 df_importance = pd.DataFrame()
 
-print("load train dataset")
-df_train = pd.read_feather("../../data/merge/train_merge.feather")
-print("load test dataset")
-df_test = pd.read_feather("../../data/merge/test_merge.feather")
+# 対象のfeatherを指定
+feathers = []
+feathers.extend(glob.glob("../../data/agg/train/*"))
 
-"""
-if select_cols is not None:
-    df_train = df_train[list(select_cols) + [target_col] + [id_col]]
-    df_test = df_test[list(select_cols) + [id_col]]
-"""
 
-sub, pred_train, pred_test, imp, result= learning(df_train=df_train,
+feathers = [x.replace("train", "{}") for x in feathers]
+
+np.random.shuffle(feathers)
+
+extract_time = 14
+
+print("all-features: {}".format(len(feathers)))
+for i in range(extract_time):
+    df_train = pd.read_feather("../../data/original/train_all.feather")[["TransactionID", "isFraud"]]
+    df_test = pd.read_feather("../../data/original/test_all.feather")[["TransactionID"]]
+
+    start_idx = len(feathers) * i // extract_time
+    end_idx = len(feathers) * (i + 1) // extract_time
+    target_feathers = feathers[start_idx:end_idx]
+    print(target_feathers)
+
+    print("train load")
+    dfs = [df_train]
+    dfs.extend([pd.read_feather(x.format("train")) for x in target_feathers])
+    df_train = pd.concat(dfs, axis=1)
+
+    print("test load")
+    dfs = [df_test]
+    dfs.extend([pd.read_feather(x.format("test")) for x in target_feathers])
+    df_test = pd.concat(dfs, axis=1)
+
+    del dfs
+    gc.collect()
+
+    sub, pred_train, pred_test, imp, result= learning(df_train=df_train,
                                                   df_test=df_test)
 
-df_submit = df_submit.append(sub, ignore_index=True)
-df_pred_train = df_pred_train.append(pred_train, ignore_index=True)
-df_pred_test = df_pred_test.append(pred_test, ignore_index=True)
-imp.to_csv("{}/importance.csv".format(output_dir))
+    df_submit += (sub / extract_time)
+    df_pred_train = df_pred_train.append(pred_train, ignore_index=True)
+    df_pred_test = df_pred_test.append(pred_test, ignore_index=True)
+    df_importance = df_importance.append(imp)
+    imp.to_csv("{}/importance_{}.csv".format(output_dir, i), index=False)
+    sub.to_csv("{}/submit_{}.csv".format(output_dir, i), index=False)
+    result.to_csv("{}/result_{}.csv".format(output_dir, i), index=False)
 
 df_submit.to_csv("{}/submit.csv".format(output_dir), index=False)
 df_pred_train.to_csv("{}/predict_train.csv".format(output_dir), index=False)
 df_pred_test.to_csv("{}/submit_detail.csv".format(output_dir), index=False)
 result.to_csv("{}/result.csv".format(output_dir), index=False)
+df_importance.to_csv("{}/importance.csv".format(output_dir), index=False)
