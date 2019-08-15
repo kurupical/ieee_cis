@@ -3,6 +3,7 @@ import numpy as np
 import pickle
 from sklearn.decomposition import PCA, TruncatedSVD
 from src.feature.common import reduce_mem_usage
+import glob
 
 def weekday_basic(df, output_dir):
     print("weekday_basic start output={}".format(output_dir))
@@ -49,8 +50,8 @@ def weekday_decomp(input_path_train, input_path_test, output_path_train, output_
         datemod_ary = np.array(datemod_ary).reshape(-1, len(df)).transpose()
         return datemod_ary
 
-    df_train = pd.read_feather(input_path_train)
-    df_test = pd.read_feather(input_path_test)
+    df_train = pd.concat([pd.read_feather(f) for f in glob.glob(input_path_train)], axis=1)
+    df_test = pd.concat([pd.read_feather(f) for f in glob.glob(input_path_test)], axis=1)
 
     ohe_train = datemod_ohe(df_train)
     ohe_test = datemod_ohe(df_test)
@@ -88,13 +89,13 @@ def weekday_decomp(input_path_train, input_path_test, output_path_train, output_
 
 df_train = pd.read_feather("../../data/original/train_transaction.feather")
 df_test = pd.read_feather("../../data/original/test_transaction.feather")
-
-weekday_basic(df_train, output_dir="../../data/date")
-weekday_basic(df_test, output_dir="../../data/date")
-aggregate_basic(df_train, output_path="../../data/date/aggregate_basic_train.feather")
-aggregate_basic(df_test, output_path="../../data/date/aggregate_basic_test.feather")
-
-weekday_decomp(input_path_train="../../data/date/weekday_basic_train.feather",
-               input_path_test="../../data/date/weekday_basic_test.feather",
-               output_path_train="../../data/date/weekday_decomp_train.feather",
-               output_path_test="../../data/date/weekday_decomp_test.feather")
+"""
+weekday_basic(df_train, output_dir="../../data/date/train")
+weekday_basic(df_test, output_dir="../../data/date/test")
+aggregate_basic(df_train, output_path="../../data/date/train/aggregate_basic.feather")
+aggregate_basic(df_test, output_path="../../data/date/test/aggregate_basic.feather")
+"""
+weekday_decomp(input_path_train="../../data/date/train/*mod7.feather",
+               input_path_test="../../data/date/test/*mod7.feather",
+               output_path_train="../../data/date/train/weekday_decomp.feather",
+               output_path_test="../../data/date/test/weekday_decomp.feather")
