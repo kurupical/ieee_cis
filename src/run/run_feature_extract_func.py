@@ -34,7 +34,7 @@ params = {'num_leaves': 60,
           'min_child_samples': 200,
           'objective': 'binary',
           'max_depth': 10,
-          'learning_rate': 0.2,
+          'learning_rate': 0.1,
           "boosting_type": "gbdt",
           "subsample": 0.5,
           "bagging_seed": 11,
@@ -42,7 +42,7 @@ params = {'num_leaves': 60,
           "verbosity": -1,
           'reg_alpha': 1,
           'reg_lambda': 1,
-          'colsample_bytree': 0.05,
+          'colsample_bytree': 0.1,
           'early_stopping_rounds': 200,
           'n_estimators': 10000,
           }
@@ -64,7 +64,7 @@ def _get_categorical_features(df):
     feats.extend([x for x in cat_cols if x not in feats])
     return feats
 
-def learning(df_train, df_test, output_dir, output_top=300):
+def learning(df_train, df_test, output_dir, output_top=200):
 
     cat_feats = _get_categorical_features(df_test)
 
@@ -91,8 +91,8 @@ def learning(df_train, df_test, output_dir, output_top=300):
     df_result = pd.DataFrame()
     df_importance["column"] = df_train.drop([id_col, target_col, *remove_cols], axis=1).columns
     for n_fold, (train_idx, val_idx) in enumerate(folds.split(df_train, y=df_train[target_col])):
-        if n_fold > 1:
-            break
+        # if n_fold > 1:
+        #     break
         print("-----------------------------------")
         print("Fold {} / {}".format(n_fold+1, n_folds))
         print("-----------------------------------")
@@ -154,8 +154,10 @@ df_pred_test = pd.DataFrame()
 df_importance = pd.DataFrame()
 df_importance_top = pd.DataFrame()
 
-df_train_org = reduce_mem_usage(pd.read_feather("../../data/original/train_all.feather"))
-df_test_org = reduce_mem_usage(pd.read_feather("../../data/original/test_all.feather"))
+# df_train_org = reduce_mem_usage(pd.read_feather("../../data/original/train_all.feather"))
+# df_test_org = reduce_mem_usage(pd.read_feather("../../data/original/test_all.feather"))
+df_train_org = pd.read_feather("../../data/original/train_all.feather")
+df_test_org = pd.read_feather("../../data/original/test_all.feather")
 
 # 対象のfeatherを指定
 target_features = ["C{}".format(x) for x in range(1, 14)]
@@ -170,7 +172,13 @@ def load_feather(df_train, df_test, load_dir):
 funcs = []
 # funcs.extend(make_list_2features(diff_2feature, target_features))
 # funcs.extend(make_list_2features(div_2feature, target_features))
-for f in glob.glob("../../output/div+agg20190815082430_extract/feathers/train*.feather"):
+for f in glob.glob("../../data/countencoding/train/*.feather"):
+    funcs.append({"func": load_feather,
+                  "col_name": os.path.basename(f.replace(".feather", "")),
+                  "params": {
+                      "load_dir": f.replace("train", "{}")
+                  }})
+for f in glob.glob("../../data/transactionDT/train/*.feather"):
     funcs.append({"func": load_feather,
                   "col_name": os.path.basename(f.replace(".feather", "")),
                   "params": {

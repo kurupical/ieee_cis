@@ -87,6 +87,8 @@ def weekday_decomp(input_path_train, input_path_test, output_path_train, output_
     df_result_train.to_feather(output_path_train)
     df_result_test.to_feather(output_path_test)
 
+
+
 df_train = pd.read_feather("../../data/original/train_transaction.feather")
 df_test = pd.read_feather("../../data/original/test_transaction.feather")
 """

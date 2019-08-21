@@ -106,7 +106,7 @@ def aggregate(input_path_train, input_path_test, output_dir):
     df_train[target_cols] = df_train[target_cols].fillna("nan")
     df_test[target_cols] = df_test[target_cols].fillna("nan")
 
-    for t_col in target_cols:
+    for t_col in target_cols[-5:]:
         print(t_col)
         df_agg_mean = df_train.append(df_test)[agg_cols + [t_col]].groupby(t_col).transform("mean")
         df_agg_mean.columns = agg_cols
