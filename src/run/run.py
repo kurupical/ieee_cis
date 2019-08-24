@@ -31,7 +31,7 @@ params = {'num_leaves': 60,
           'max_depth': 10,
           'learning_rate': 0.01,
           "boosting_type": "gbdt",
-          "subsample": 0.2,
+          "subsample": 0.6,
           "bagging_seed": 11,
           "metric": 'auc',
           "verbosity": -1,
@@ -43,7 +43,7 @@ params = {'num_leaves': 60,
           }
 
 def _get_categorical_features(df):
-    numerics = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']
+    numerics = ['int8', 'int16', 'int32', 'int64', 'float16', 'float32', 'float64']
     feats = [col for col in list(df.columns) if df[col].dtype not in numerics]
 
     cat_cols = []

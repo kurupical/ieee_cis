@@ -1,5 +1,6 @@
 from tqdm import tqdm
 import numpy as np
+import pandas as pd
 
 def reduce_mem_usage(df, verbose=True, mode="predict"):
     numerics = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']
