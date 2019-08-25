@@ -11,14 +11,15 @@ from tqdm import tqdm
 import gc
 import time
 from src.feature.common import reduce_mem_usage
+import random
 
 # hyper parameters
 n_folds = 5
 random_state = 0
 n_loop = 1
-target_col = "isFraud"
+target_col = "isTrain"
 id_col = "TransactionID"
-remove_cols = ["TransactionDT",
+remove_cols = ["TransactionDT", "isFraud",
                "id_13", "id_30", "id_31"# train/testで分布が違いすぎる (別手法で対応)
                ]
 nrows_train = None # Noneだと全データをロード
@@ -39,9 +40,9 @@ params = {'num_leaves': 60,
           "verbosity": -1,
           'reg_alpha': 1,
           'reg_lambda': 1,
-          'colsample_bytree': 0.05,
-          'early_stopping_rounds': 200,
-          'n_estimators': 10000,
+          'colsample_bytree': 0.3,
+          'early_stopping_rounds': 50,
+          'n_estimators': 500,
           }
 
 def _get_categorical_features(df):
@@ -61,29 +62,24 @@ def _get_categorical_features(df):
     feats.extend([x for x in cat_cols if x not in feats])
     return feats
 
-def learning(df_train, df_test):
+def learning(df_train):
 
-    cat_feats = _get_categorical_features(df_test)
+    cat_feats = _get_categorical_features(df_train)
 
     for f in cat_feats:
         # print(f)
         df_train[f] = df_train[f].fillna("nan").astype(str)
-        df_test[f] = df_test[f].fillna("nan").astype(str)
-        le = LabelEncoder().fit(df_train[f].append(df_test[f]))
+        le = LabelEncoder().fit(df_train[f])
         df_train[f] = le.transform(df_train[f])
-        df_test[f] = le.transform(df_test[f])
 
     i = 0
-    folds = KFold(n_splits=n_folds)
+    folds = KFold(n_splits=n_folds, shuffle=True, random_state=0)
 
     print("-----------------------------------")
     print("LOOP {} / {}".format(i+1, n_loop))
     print("-----------------------------------")
 
     df_pred_train = pd.DataFrame()
-    df_pred_test = pd.DataFrame()
-    print(df_test)
-    df_pred_test[id_col] = df_test[id_col]
     df_importance = pd.DataFrame()
     df_result = pd.DataFrame()
     df_importance["column"] = df_train.drop([id_col, target_col], axis=1).columns
@@ -110,8 +106,6 @@ def learning(df_train, df_test):
              "pred": w_pred_train,
              "y": df_train[target_col].iloc[val_idx]}
         ), ignore_index=True)
-        w_pred_test = model.predict(df_test.drop([id_col], axis=1))
-        df_pred_test["pred_fold{}_{}".format(i, n_fold)] = w_pred_test
         df_importance["fold{}_{}_gain".format(i, n_fold)] = \
             model.feature_importance(importance_type="gain") / model.feature_importance(importance_type="gain").sum()
         df_importance["fold{}_{}_split".format(i, n_fold)] = \
@@ -125,13 +119,10 @@ def learning(df_train, df_test):
             ),
             ignore_index=True
         )
-        del w_pred_train, w_pred_test, lgb_train, lgb_val, model
+        del w_pred_train, lgb_train, lgb_val, model
         gc.collect()
 
-    df_submit = pd.DataFrame()
-    df_submit[id_col] = df_test[id_col]
-    df_submit[target_col] = df_pred_test.drop(id_col, axis=1).mean(axis=1)
-    return df_submit, df_pred_train, df_pred_test, df_importance, df_result
+    return df_pred_train, df_importance, df_result
 
 
 # print("waiting...")
@@ -139,33 +130,28 @@ def learning(df_train, df_test):
 output_dir = "../../output/{}".format(dt.now().strftime("%Y%m%d%H%M%S"))
 os.makedirs(output_dir)
 
-df_submit = pd.DataFrame()
 df_pred_train = pd.DataFrame()
-df_pred_test = pd.DataFrame()
 df_importance = pd.DataFrame()
 
 print("load train dataset")
-df_train = pd.read_feather("../../data/merge/train_merge.feather").drop(remove_cols, axis=1, errors="ignore")
-print("load test dataset")
-df_test = pd.read_feather("../../data/merge/test_merge.feather").drop(remove_cols, axis=1, errors="ignore")
 
+df_train = pd.read_feather("../../data/merge/train_merge.feather").iloc[random.sample(list(np.arange(590000)), 50000)]
+print("load test dataset")
+df_test = pd.read_feather("../../data/merge/test_merge.feather").iloc[random.sample(list(np.arange(500000)), 50000)]
+df_train["isTrain"] = 1
+df_test["isTrain"] = 0
+
+df_all = pd.concat([df_train, df_test]).drop(remove_cols, axis=1, errors="ignore")
 if select_cols is not None:
-    df_train = df_train[list(select_cols) + [target_col] + [id_col]]
-    df_test = df_test[list(select_cols) + [id_col]]
+    df_all = df_all[list(select_cols) + [target_col] + [id_col]]
 
 if is_reduce_memory:
-    df_train = reduce_mem_usage(df_train)
-    df_test = reduce_mem_usage(df_test)
+    df_all = reduce_mem_usage(df_all)
 
-sub, pred_train, pred_test, imp, result= learning(df_train=df_train,
-                                                  df_test=df_test)
+pred_train, imp, result= learning(df_train=df_all)
 
-df_submit = df_submit.append(sub, ignore_index=True)
 df_pred_train = df_pred_train.append(pred_train, ignore_index=True)
-df_pred_test = df_pred_test.append(pred_test, ignore_index=True)
 imp.to_csv("{}/importance.csv".format(output_dir))
 
-df_submit.to_csv("{}/submit.csv".format(output_dir), index=False)
 df_pred_train.to_csv("{}/predict_train.csv".format(output_dir), index=False)
-df_pred_test.to_csv("{}/submit_detail.csv".format(output_dir), index=False)
 result.to_csv("{}/result.csv".format(output_dir), index=False)

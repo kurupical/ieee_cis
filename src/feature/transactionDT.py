@@ -27,12 +27,12 @@ def convDT(df_train, df_test, output_dir):
     # df_result["TransactionDT_timerange"] = ["range_{}".format(x%6) for x in df_result["TransactionDT_hhmmss"]]
 
 
-    for i in range(1, 15+1):
-        df_result["diff_TransactionDay_D{}".format(i)] = df["D{}".format(i)] - df["TransactionDay"]
-        # df_result["div_TransactionDay_D{}".format(i)] = df["D{}".format(i)] / df["TransactionDay"]
+    # for i in range(1, 15+1):
+    #     df_result["diff_TransactionDay_D{}".format(i)] = df["D{}".format(i)] - df["TransactionDay"]
+    #     df_result["div_TransactionDay_D{}".format(i)] = df["D{}".format(i)] / df["TransactionDay"]
 
     df_result["ProductCD"] = df["ProductCD"]
-    df_result["TransactionDay_ProductCD_countencoding"] = df.groupby(["TransactionDay", "ProductCD"])["TransactionID"].transform("count")
+    # df_result["TransactionDay_ProductCD_countencoding"] = df.groupby(["TransactionDay", "ProductCD"])["TransactionID"].transform("count")
     df_result["TransactionWeek_ProductCD_countencoding"] = df_result.groupby(["TransactionWeekday", "ProductCD"])["ProductCD"].transform("count")
     df_result["TransactionQuarter_ProductCD_countencoding"] = df_result.groupby(["TransactionDT_month_in_quarter", "ProductCD"])["ProductCD"].transform("count")
     df_result["TransactionHalfyearly_ProductCD_countencoding"] = df_result.groupby(["TransactionDT_month_in_half-yearly", "ProductCD"])["ProductCD"].transform("count")

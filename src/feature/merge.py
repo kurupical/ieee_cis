@@ -46,7 +46,6 @@ merge_features.extend(glob.glob("../../data/basic_feature/train/*.feather"))
 merge_features.extend(glob.glob("../../output/aggfeat_top640_20190819220508_extract/feathers/train_*.feather"))
 
 merge_features = [x.replace("train", "{}") for x in merge_features]
-print("train")
 df_train = pd.read_feather("../../data/original/train_all.feather")
 # print(f)
 dfs = [df_train]

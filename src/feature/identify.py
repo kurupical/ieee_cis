@@ -14,7 +14,7 @@ def identify():
     df_all["W__TransactionDay"] = (df_all["TransactionDT"] / 60 / 24 / 24).astype(int)
     df_all["W__diff_D1"] = (df_all["W__TransactionDay"] - df_all["D1"])
     # df_all["W__diff_D11"] = (df_all["W__TransactionDay"] - df_all["D11"])
-    df_all["W__diff_D12"] = (df_all["W__TransactionDay"] - df_all["D12"])
+    # df_all["W__diff_D12"] = (df_all["W__TransactionDay"] - df_all["D12"])
     # df_all["W__diff_D15"] = (df_all["W__TransactionDay"] - df_all["D15"])
     df_all["W__uid1"] = df_all["card1"].astype(str) + \
                             df_all["card2"].astype(str) + \
@@ -29,7 +29,7 @@ def identify():
     df_test = df_all.tail(506691).reset_index(drop=True)
     agg_cols = ['TransactionAmt']
     for base_col in tqdm.tqdm(["W__uid1", "W__uid2", "W__uid3"]):
-        for date_col in ["W__diff_D1", "W__diff_D12"]:
+        for date_col in ["W__diff_D1"]:
             df_train["W__uid_col"] = df_train[base_col].astype(str) + df_train[date_col].astype(str)
             df_test["W__uid_col"] = df_test[base_col].astype(str) + df_test[date_col].astype(str)
 
@@ -50,6 +50,7 @@ def identify():
                 col_name = "agg_{}_{}_div{}_count".format(base_col[3:], date_col[3:], div_date)
                 enc = df_train.groupby(["W__uid_date"]).agg({"TransactionID": "count"})["TransactionID"].to_dict()
                 to_feather(df_train["W__uid_date"].map(enc), col_name=col_name, mode="train")
+                enc = df_test.groupby(["W__uid_date"]).agg({"TransactionID": "count"})["TransactionID"].to_dict()
                 to_feather(df_test["W__uid_date"].map(enc), col_name=col_name, mode="test")
 
                 for agg_col in agg_cols:
@@ -62,8 +63,7 @@ def identify():
                                    col_name="div_{}".format(col_name), mode="train")
                         to_feather(df_train[agg_col] - df_train["W__uid_date"].map(enc),
                                    col_name="diff_{}".format(col_name), mode="train")
-
-                        enc = pd.concat([df_train, df_test], axis=1).groupby(["W__uid_date"])[agg_col].count().to_dict()
+                        enc = pd.concat([df_train, df_test]).groupby(["W__uid_date"]).agg({agg_col: agg_type})[agg_col].to_dict()
                         to_feather(df_test["W__uid_date"].map(enc), col_name=col_name, mode="test")
                         to_feather(df_test[agg_col] / df_test["W__uid_date"].map(enc),
                                    col_name="div_{}".format(col_name), mode="test")
