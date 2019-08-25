@@ -63,8 +63,27 @@ def make_id_countencode(df, mode):
         to_feather(df.groupby(col)["TransactionID"].transform("count") / len(df),
                    col_name="tra-tes_countencoding_{}".format(col), mode=mode)
 
+def make_nan_pattern(df, mode):
+
+    to_feather(df["id_01"].isnull().astype(int).astype(str).str.cat(df[["id_{0:02d}".format(x) for x in range(2, 38+1)]].isnull().astype(int).astype(str)),
+               col_name="nan_pattern_id", mode=mode)
+    to_feather(df["C1"].isnull().astype(int).astype(str).str.cat(df[["C{}".format(x) for x in range(2, 14+1)]].isnull().astype(int).astype(str)),
+               col_name="nan_pattern_C", mode=mode)
+    to_feather(df["D1"].isnull().astype(int).astype(str).str.cat(df[["D{}".format(x) for x in range(2, 15+1)]].isnull().astype(int).astype(str)),
+               col_name="nan_pattern_D", mode=mode)
+    to_feather(df["M1"].isnull().astype(int).astype(str).str.cat(df[["M{}".format(x) for x in range(2, 9+1)]].isnull().astype(int).astype(str)),
+               col_name="nan_pattern_M", mode=mode)
+    to_feather(df["V1"].isnull().astype(int).astype(str).str.cat(df[["V{}".format(x) for x in range(2, 339+1)]].isnull().astype(int).astype(str)),
+               col_name="nan_pattern_V", mode=mode)
+
+def make_productCD_December(df, mode):
+    df = pd.concat([df, pd.read_feather("../../data/transactionDT/{}/convDT.feather".format(mode))], axis=1)
+
+    to_feather(df["ProductCD"] + df["TransactionDT_isDecember"].astype(str),
+               col_name="ProductCD_isDecember", mode=mode)
 df_train = pd.read_feather("../../data/original/train_all.feather")
 df_test = pd.read_feather("../../data/original/test_all.feather")
+"""
 make_identity_feature(df_train, "../../data/basic_feature/train/identity.feature")
 make_identity_feature(df_test, "../../data/basic_feature/test/identity.feature")
 make_emaildomain(df_train, "../../data/basic_feature/train/emaildomain.feature")
@@ -73,3 +92,9 @@ make_C_D_feature(df_train, "train")
 make_C_D_feature(df_test, "test")
 make_id_countencode(df_train, "train")
 make_id_countencode(df_test, "test")
+make_nan_pattern(df_train, "train")
+make_nan_pattern(df_test, "test")
+"""
+
+make_productCD_December(df_train, "train")
+make_productCD_December(df_test, "test")

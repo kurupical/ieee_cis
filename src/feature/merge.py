@@ -3,7 +3,7 @@ import numpy as np
 import gc
 import glob
 from tqdm import tqdm
-
+import time
 
 def valid_card(df_train, df_test):
     for col in ["card1"]:
@@ -34,11 +34,12 @@ def drop_minority_card123(df_train, df_test):
     print("after postprocessing length: {}".format(len(df_train)))
     return df_train, df_test
 
+# time.sleep(60*60*2)
 merge_features = []
 # merge_features = glob.glob("../../data/date/train/*.feather")
 merge_features.extend(glob.glob("../../data/transactionDT/train/*.feather"))
-# merge_features.extend(glob.glob("../../data/countencoding/train/*.feather"))
-# merge_features.extend(glob.glob("../../data/decimal/train/*.feather"))
+merge_features.extend(glob.glob("../../data/countencoding/train/*.feather"))
+merge_features.extend(glob.glob("../../data/decimal/train/*.feather"))
 merge_features.extend(glob.glob("../../data/identify/train/*.feather"))
 merge_features.extend(glob.glob("../../data/basic_feature/train/*.feather"))
 
@@ -60,7 +61,7 @@ df_test = pd.concat(dfs, axis=1)
 
 print(df_train)
 # df_train, df_test = drop_minority_card123(df_train, df_test)
-df_train, df_test = valid_card(df_train, df_test)
+# df_train, df_test = valid_card(df_train, df_test)
 
 drop_cols = []
 df_train = df_train.drop(drop_cols, axis=1)

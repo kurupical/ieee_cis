@@ -23,7 +23,7 @@ remove_cols = ["TransactionDT",
                ]
 nrows_train = None # Noneだと全データをロード
 nrows_test = None # Noneだと全データをロード
-is_reduce_memory = False
+is_reduce_memory = True
 select_cols = None # 全てのcolumnを選ぶ
 # select_cols = pd.read_csv("cols.csv")["column"].values
 
@@ -135,7 +135,7 @@ def learning(df_train, df_test):
 
 
 # print("waiting...")
-# time.sleep(60*60)
+# time.sleep(60*60*3)
 output_dir = "../../output/{}".format(dt.now().strftime("%Y%m%d%H%M%S"))
 os.makedirs(output_dir)
 
