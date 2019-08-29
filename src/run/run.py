@@ -27,7 +27,6 @@ is_reduce_memory = False
 select_cols = None # 全てのcolumnを選ぶ
 # select_cols = pd.read_csv("cols.csv")["column"].values
 
-"""
 params = {'num_leaves': 60,
           'min_child_samples': 200,
           'objective': 'binary',
@@ -42,27 +41,8 @@ params = {'num_leaves': 60,
           'reg_lambda': 1,
           'colsample_bytree': 0.05,
           'early_stopping_rounds': 200,
-          'n_estimators': 10000,
+          'n_estimators': 20000,
           }
-"""
-
-params = {
-                    'objective':'binary',
-                    'boosting_type':'gbdt',
-                    'metric':'auc',
-                    'n_jobs':-1,
-                    'learning_rate':0.01,
-                    'num_leaves': 2**8,
-                    'max_depth':-1,
-                    'tree_learner':'serial',
-                    'colsample_bytree': 0.7,
-                    'subsample_freq':1,
-                    'subsample':0.7,
-                    'n_estimators':800,
-                    'max_bin':255,
-                    'verbose':-1,
-                    'early_stopping_rounds':100,
-                }
 
 def _get_categorical_features(df):
     numerics = ['int8', 'int16', 'int32', 'int64', 'float16', 'float32', 'float64']
@@ -154,8 +134,6 @@ def learning(df_train, df_test):
     return df_submit, df_pred_train, df_pred_test, df_importance, df_result
 
 
-# print("waiting...")
-# time.sleep(60*60*3)
 output_dir = "../../output/{}".format(dt.now().strftime("%Y%m%d%H%M%S"))
 os.makedirs(output_dir)
 

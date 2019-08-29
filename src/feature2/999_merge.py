@@ -5,10 +5,11 @@ import glob
 from tqdm import tqdm
 import time
 
-# time.sleep(60*60*2)
+time.sleep(60*60*0.25)
 merge_features = []
 merge_features = glob.glob("../../data/101_agg_id/train/*.feather")
 merge_features.extend(glob.glob("../../data/102_countencoding/train/*.feather"))
+merge_features.extend(glob.glob("../../data/103_pattern/train/*.feather"))
 merge_features = [x.replace("train", "{}") for x in merge_features]
 
 df_train = pd.read_feather("../../data/baseline/train/baseline.feather")
