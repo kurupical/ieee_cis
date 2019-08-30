@@ -27,10 +27,10 @@ is_reduce_memory = False
 select_cols = None # 全てのcolumnを選ぶ
 # select_cols = pd.read_csv("cols.csv")["column"].values
 
-params = {'num_leaves': 60,
+params = {'num_leaves': 255,
           'min_child_samples': 200,
           'objective': 'binary',
-          'max_depth': 10,
+          'max_depth': -1,
           'learning_rate': 0.01,
           "boosting_type": "gbdt",
           "subsample": 0.6,

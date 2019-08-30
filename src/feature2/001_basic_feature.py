@@ -19,6 +19,7 @@ def datefeature(df):
     df['DT_hour'] = df['TEMP__DT'].dt.hour
     df['DT_day_week'] = df['TEMP__DT'].dt.dayofweek
     df['DT_day'] = df['TEMP__DT'].dt.day
+    df["DT_isDecember"] = (df["TEMP__DT"].dt.month == 12).astype(int)
 
     # D9 column
     df['D9'] = np.where(df['D9'].isna(), 0, 1)
@@ -102,6 +103,7 @@ def identify_id(df):
     df["TEMP__uid"] = df['card1'].astype(str)+'_'+df['card2'].astype(str)
     df["TEMP__uid2"] = df["TEMP__uid"].astype(str)+"_"+df['card3'].astype(str)+'_'+df['card5'].astype(str)
     df["TEMP__uid3"] = df["TEMP__uid2"].astype(str)+"_"+df['addr1'].astype(str)+'_'+df['addr2'].astype(str)
+    df["TEMP__uid4"] = (df["V160"] - df["V159"]).astype(str)
     df["TEMP__uid2+DT"] = df["TEMP__uid2"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D1"]).astype(str)
     df["TEMP__uid3+DT"] = df["TEMP__uid3"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D1"]).astype(str)
     df["TEMP__uid2+DT+D"] = df["TEMP__uid2"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D1"]).astype(str)+"_"+df["TEMP__DT_D"].astype(str)
@@ -109,7 +111,7 @@ def identify_id(df):
     df["TEMP__uid2+DT+M4"] = df["TEMP__uid2+DT"].astype(str)+"_"+(df["M4"]).astype(str)
     df["TEMP__uid3+DT+M4"] = df["TEMP__uid3+DT"].astype(str)+"_"+(df["M4"]).astype(str)
 
-    for col in ["TEMP__uid", "TEMP__uid2", "TEMP__uid3", "TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid2+DT+D", "TEMP__uid2+DT+W",
+    for col in ["TEMP__uid", "TEMP__uid2", "TEMP__uid3", "TEMP__uid4", "TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid2+DT+D", "TEMP__uid2+DT+W",
                 "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"]:
         df[col] = df[col].apply(fillna)
 
@@ -119,9 +121,32 @@ def identify_id(df):
 
     return df
 
+def make_C_D_feature(df):
+    print(sys._getframe().f_code.co_name)
+    for d_col in ["D1", "D12"]:
+        agg_cols = []
+        agg_cols.extend(["C{}".format(x) for x in range(1, 14+1)])
+        agg_cols.extend(["D5"])
+        for agg_col in agg_cols:
+            df["div_{}_{}".format(agg_col, d_col)] = df[agg_col] / df[d_col]
+
+    return df
+
+def fix_data_existing_only_test(df):
+    print(sys._getframe().f_code.co_name)
+
+    # C13がnanのデータ: C1-C15が0。異常データなのでnp.nanにするかな？
+    idx_C13_is_nan = np.where(df["C13"].isnull())[0]
+    for i in range(1, 14+1):
+        df["C{}".format(i)].iloc[idx_C13_is_nan] = np.nan
+
+    return df
+
 
 df_train = pd.read_feather("../../data/original/train_all.feather")
 df_test = pd.read_feather("../../data/original/test_all.feather")
+
+df_test = fix_data_existing_only_test(df_test)
 
 df_train = datefeature(df_train)
 df_test = datefeature(df_test)
@@ -136,6 +161,9 @@ df_test = device_info(df_test)
 
 df_train = identify_id(df_train)
 df_test = identify_id(df_test)
+
+df_train = make_C_D_feature(df_train)
+df_test = make_C_D_feature(df_test)
 
 df_train, df_test = amt_check(df_train, df_test)
 
