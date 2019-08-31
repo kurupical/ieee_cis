@@ -4,6 +4,19 @@ import numpy as np
 import datetime
 import sys
 
+def make_nan_pattern(df):
+    def join_string(x):
+        return "".join(x.astype(str).values)
+
+    print(sys._getframe().f_code.co_name)
+    df["nan_pattern_id"] = df[["id_{0:02d}".format(x) for x in range(1, 38+1)]].isnull().astype(int).apply(join_string, axis=1)
+    df["nan_pattern_C"] = df[["C{}".format(x) for x in range(1, 14+1)]].isnull().astype(int).apply(join_string, axis=1)
+    df["nan_pattern_D"] = df[["D{}".format(x) for x in range(1, 15+1)]].isnull().astype(int).apply(join_string, axis=1)
+    df["nan_pattern_M"] = df[["M{}".format(x) for x in range(1, 9+1)]].isnull().astype(int).apply(join_string, axis=1)
+    # df["nan_pattern_V"] = df[["V{}".format(x) for x in range(1, 339+1)]].isnull().astype(int).apply(join_string, axis=1)
+    df["nan_pattern_M+M4"] = df["nan_pattern_M"].astype(str).str.cat(df["M4"].astype(str))
+    return df
+
 def datefeature(df):
     # https://www.kaggle.com/kyakovlev/ieee-gb-2-make-amount-useful-again
     print(sys._getframe().f_code.co_name)
@@ -126,7 +139,7 @@ def make_C_D_feature(df):
     for d_col in ["D1", "D12"]:
         agg_cols = []
         agg_cols.extend(["C{}".format(x) for x in range(1, 14+1)])
-        agg_cols.extend(["D5"])
+        agg_cols.extend(["D5", "D11", "D13", "D14", "D15"])
         for agg_col in agg_cols:
             df["div_{}_{}".format(agg_col, d_col)] = df[agg_col] / df[d_col]
 
@@ -142,9 +155,11 @@ def fix_data_existing_only_test(df):
 
     return df
 
-
 df_train = pd.read_feather("../../data/original/train_all.feather")
 df_test = pd.read_feather("../../data/original/test_all.feather")
+
+df_train = make_nan_pattern(df_train)
+df_test = make_nan_pattern(df_test)
 
 df_test = fix_data_existing_only_test(df_test)
 

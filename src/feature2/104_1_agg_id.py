@@ -54,10 +54,10 @@ def id_aggregates(df_train, df_test, agg_cols, target_cols, agg_types):
 
 df_train = pd.read_feather("../../data/baseline/train/baseline.feather")
 df_train = pd.concat([df_train,
-                      pd.read_feather("../../data/104_pattern/train/pattern.feather")])
+                      pd.read_feather("../../data/104_pattern/train/pattern.feather")], axis=1)
 df_test = pd.read_feather("../../data/baseline/test/baseline.feather")
 df_test = pd.concat([df_test,
-                     pd.read_feather("../../data/104_pattern/test/pattern.feather")])
+                     pd.read_feather("../../data/104_pattern/test/pattern.feather")], axis=1)
 
 original_features = df_train.columns
 

@@ -21,10 +21,10 @@ df_test = pd.read_feather("../../data/baseline/test/baseline.feather")
 
 original_features = df_train.columns
 
-
+"""
 df_train = make_nan_pattern(df_train)
 df_test = make_nan_pattern(df_test)
-
+"""
 
 df_train = df_train[[x for x in df_train.columns if x not in original_features]]
 df_test = df_test[[x for x in df_test.columns if x not in original_features]]

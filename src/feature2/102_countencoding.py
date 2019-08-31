@@ -3,13 +3,16 @@ import pandas as pd
 import numpy as np
 import tqdm
 
-def countencoding(df_train, df_test, target_cols, agg_cols):
+def countencoding(df_train, df_test, target_cols):
     for col in tqdm.tqdm(target_cols):
         temp_df = pd.concat([df_train[[col]], df_test[[col]]])
         fq_encode = temp_df[col].value_counts(dropna=False).to_dict()
         df_train["fq_enc_" + col] = df_train[col].map(fq_encode)
         df_test['fq_enc_' + col] = df_test[col].map(fq_encode)
 
+    return df_train, df_test
+
+def countencoding_agg(df_train, df_test, target_cols, agg_cols):
     for col in agg_cols:
         temp_df = pd.concat([df_train[[col]], df_test[[col]]])
         fq_encode = temp_df[col].value_counts().to_dict()
@@ -45,15 +48,37 @@ target_cols = ['card1','card2','card3','card5',
                'dist1','dist2',
                'P_emaildomain', 'R_emaildomain',
                'DeviceInfo','DeviceInfo_device','DeviceInfo_version',
+               "id_12", "id_13", "id_14", "id_15", "id_16", "id_17", "id_18", "id_19", "id_20", "id_21",
+               "id_22", "id_23", "id_24", "id_25", "id_26", "id_27", "id_28", "id_29",
+               "id_32", 'id_33', "id_34", "id_35", "id_36", "id_37",
                'id_30','id_30_device','id_30_version',
                'id_31_device',
-               'id_33',
                'TEMP__uid','TEMP__uid2','TEMP__uid3', "TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid4",
                "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"
               ]
 df_train, df_test = countencoding(df_train, df_test,
+                                  target_cols=target_cols)
+target_cols = ['TEMP__uid','TEMP__uid2','TEMP__uid3', "TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid4",
+               "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"
+              ]
+df_train, df_test = countencoding_agg(df_train, df_test,
                                   target_cols=target_cols,
-                                  agg_cols=["TEMP__DT_M", "TEMP__DT_W", "TEMP__DT_D", "ProductCD"])
+                                  agg_cols=["TEMP__DT_M", "TEMP__DT_W", "TEMP__DT_D"])
+target_cols = ['addr1','addr2',
+               'dist1','dist2',
+               'P_emaildomain', 'R_emaildomain',
+               'DeviceInfo','DeviceInfo_device','DeviceInfo_version',
+               "id_12", "id_13", "id_14", "id_15", "id_16", "id_17", "id_18", "id_19", "id_20", "id_21",
+               "id_22", "id_23", "id_24", "id_25", "id_26", "id_27", "id_28", "id_29",
+               "id_32", 'id_33', "id_34", "id_35", "id_36", "id_37",
+               'id_30','id_30_device','id_30_version',
+               'id_31_device',
+               ]
+df_train, df_test = countencoding_agg(df_train, df_test,
+                                  target_cols=target_cols,
+                                  agg_cols=['TEMP__uid','TEMP__uid2','TEMP__uid3', "TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid4",
+                                            "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"
+                                           ])
 
 df_train = df_train[[x for x in df_train.columns if x not in original_features]]
 df_test = df_test[[x for x in df_test.columns if x not in original_features]]

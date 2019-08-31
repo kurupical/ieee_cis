@@ -23,17 +23,17 @@ remove_cols = ["TransactionDT",
                ]
 nrows_train = None # Noneだと全データをロード
 nrows_test = None # Noneだと全データをロード
-is_reduce_memory = False
+is_reduce_memory = True
 select_cols = None # 全てのcolumnを選ぶ
 # select_cols = pd.read_csv("cols.csv")["column"].values
 
-params = {'num_leaves': 255,
+params = {'num_leaves': 256,
           'min_child_samples': 200,
           'objective': 'binary',
           'max_depth': -1,
           'learning_rate': 0.01,
           "boosting_type": "gbdt",
-          "subsample": 0.6,
+          "subsample": 0.7,
           "bagging_seed": 11,
           "metric": 'auc',
           "verbosity": -1,
@@ -133,7 +133,8 @@ def learning(df_train, df_test):
     df_submit[target_col] = df_pred_test.drop(id_col, axis=1).mean(axis=1)
     return df_submit, df_pred_train, df_pred_test, df_importance, df_result
 
-
+print("waiting...")
+time.sleep(60*60*3)
 output_dir = "../../output/{}".format(dt.now().strftime("%Y%m%d%H%M%S"))
 os.makedirs(output_dir)
 
