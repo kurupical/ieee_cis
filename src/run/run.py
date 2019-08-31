@@ -3,7 +3,7 @@ import lightgbm as lgb
 import os
 import numpy as np
 from datetime import datetime as dt
-from sklearn.model_selection import KFold
+from sklearn.model_selection import KFold, GroupKFold
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import roc_auc_score
 import copy
@@ -18,12 +18,13 @@ random_state = 0
 n_loop = 1
 target_col = "isFraud"
 id_col = "TransactionID"
-remove_cols = ["TransactionDT",
+drop_cols = ["TransactionDT",
                "id_13", "id_30", "id_31"# train/testで分布が違いすぎる (別手法で対応)
                ]
+
 nrows_train = None # Noneだと全データをロード
 nrows_test = None # Noneだと全データをロード
-is_reduce_memory = True
+is_reduce_memory = False
 select_cols = None # 全てのcolumnを選ぶ
 # select_cols = pd.read_csv("cols.csv")["column"].values
 
@@ -63,7 +64,26 @@ def _get_categorical_features(df):
 
 def learning(df_train, df_test):
 
-    cat_feats = _get_categorical_features(df_test)
+
+    i = 0
+    # folds = KFold(n_splits=n_folds)
+    folds = GroupKFold(n_splits=n_folds)
+    print("-----------------------------------")
+    print("LOOP {} / {}".format(i+1, n_loop))
+    print("-----------------------------------")
+    drop_cols.extend([x for x in df_train.columns if x[:6] in ["TEMP__"]])
+    print("drop_cols: {}".format(drop_cols))
+    fold_groups = df_train["TEMP__uid2+DT"].fillna("NaN")
+
+    df_pred_train = pd.DataFrame()
+    df_pred_test = pd.DataFrame()
+    print(df_test)
+    df_pred_test[id_col] = df_test[id_col]
+    df_importance = pd.DataFrame()
+    df_result = pd.DataFrame()
+    df_importance["column"] = df_train.drop([id_col, target_col, *drop_cols], axis=1).columns
+
+    cat_feats = _get_categorical_features(df_test.drop([id_col, *drop_cols], axis=1))
 
     for f in cat_feats:
         # print(f)
@@ -73,21 +93,7 @@ def learning(df_train, df_test):
         df_train[f] = le.transform(df_train[f])
         df_test[f] = le.transform(df_test[f])
 
-    i = 0
-    folds = KFold(n_splits=n_folds)
-
-    print("-----------------------------------")
-    print("LOOP {} / {}".format(i+1, n_loop))
-    print("-----------------------------------")
-
-    df_pred_train = pd.DataFrame()
-    df_pred_test = pd.DataFrame()
-    print(df_test)
-    df_pred_test[id_col] = df_test[id_col]
-    df_importance = pd.DataFrame()
-    df_result = pd.DataFrame()
-    df_importance["column"] = df_train.drop([id_col, target_col], axis=1).columns
-    for n_fold, (train_idx, val_idx) in enumerate(folds.split(df_train)):
+    for n_fold, (train_idx, val_idx) in enumerate(folds.split(df_train, groups=fold_groups)):
         print("-----------------------------------")
         print("Fold {} / {}".format(n_fold+1, n_folds))
         print("-----------------------------------")
@@ -95,8 +101,8 @@ def learning(df_train, df_test):
         # y = df_train[target_col]
         # if n_fold == 0: continue
 
-        lgb_train = lgb.Dataset(data=df_train.drop([id_col, target_col], axis=1).iloc[train_idx], label=df_train[target_col].iloc[train_idx])
-        lgb_val = lgb.Dataset(data=df_train.drop([id_col, target_col], axis=1).iloc[val_idx], label=df_train[target_col].iloc[val_idx])
+        lgb_train = lgb.Dataset(data=df_train.drop([id_col, target_col, *drop_cols], axis=1).iloc[train_idx], label=df_train[target_col].iloc[train_idx])
+        lgb_val = lgb.Dataset(data=df_train.drop([id_col, target_col, *drop_cols], axis=1).iloc[val_idx], label=df_train[target_col].iloc[val_idx])
 
         model = lgb.train(copy.copy(params),
                           lgb_train,
@@ -104,13 +110,13 @@ def learning(df_train, df_test):
                           valid_sets=[lgb_train, lgb_val],
                           verbose_eval=100)
 
-        w_pred_train = model.predict(df_train.drop([id_col, target_col], axis=1).iloc[val_idx])
+        w_pred_train = model.predict(df_train.drop([id_col, target_col, *drop_cols], axis=1).iloc[val_idx])
         df_pred_train = df_pred_train.append(pd.DataFrame(
             {id_col: df_train[id_col].iloc[val_idx],
              "pred": w_pred_train,
              "y": df_train[target_col].iloc[val_idx]}
         ), ignore_index=True)
-        w_pred_test = model.predict(df_test.drop([id_col], axis=1))
+        w_pred_test = model.predict(df_test.drop([id_col, *drop_cols], axis=1))
         df_pred_test["pred_fold{}_{}".format(i, n_fold)] = w_pred_test
         df_importance["fold{}_{}_gain".format(i, n_fold)] = \
             model.feature_importance(importance_type="gain") / model.feature_importance(importance_type="gain").sum()
@@ -120,8 +126,8 @@ def learning(df_train, df_test):
             pd.DataFrame(
                 {"fold": [n_fold],
                  "random_state": [random_state],
-                 "auc_train": [roc_auc_score(df_train[target_col].iloc[train_idx], model.predict(df_train.drop([id_col, target_col], axis=1).iloc[train_idx]))],
-                 "auc_test": [roc_auc_score(df_train[target_col].iloc[val_idx], model.predict(df_train.drop([id_col, target_col], axis=1).iloc[val_idx]))]}
+                 "auc_train": [roc_auc_score(df_train[target_col].iloc[train_idx], model.predict(df_train.drop([id_col, target_col, *drop_cols], axis=1).iloc[train_idx]))],
+                 "auc_test": [roc_auc_score(df_train[target_col].iloc[val_idx], model.predict(df_train.drop([id_col, target_col, *drop_cols], axis=1).iloc[val_idx]))]}
             ),
             ignore_index=True
         )
@@ -133,8 +139,8 @@ def learning(df_train, df_test):
     df_submit[target_col] = df_pred_test.drop(id_col, axis=1).mean(axis=1)
     return df_submit, df_pred_train, df_pred_test, df_importance, df_result
 
-print("waiting...")
-time.sleep(60*60*3)
+# print("waiting...")
+# time.sleep(60*60*3)
 output_dir = "../../output/{}".format(dt.now().strftime("%Y%m%d%H%M%S"))
 os.makedirs(output_dir)
 
@@ -144,9 +150,9 @@ df_pred_test = pd.DataFrame()
 df_importance = pd.DataFrame()
 
 print("load train dataset")
-df_train = pd.read_feather("../../data/merge/train_merge.feather").drop(remove_cols, axis=1, errors="ignore")
+df_train = pd.read_feather("../../data/merge/train_merge.feather")
 print("load test dataset")
-df_test = pd.read_feather("../../data/merge/test_merge.feather").drop(remove_cols, axis=1, errors="ignore")
+df_test = pd.read_feather("../../data/merge/test_merge.feather")
 
 if select_cols is not None:
     df_train = df_train[list(select_cols) + [target_col] + [id_col]]

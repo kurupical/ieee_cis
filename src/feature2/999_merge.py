@@ -47,11 +47,13 @@ df_test = pd.concat(dfs, axis=1)
 print(df_train)
 df_train, df_test = postprocess(df_train, df_test)
 
+"""
 drop_cols = [x for x in df_train.columns if x[:6] in ["TEMP__"]]
 print("drop_cols: {}".format(drop_cols))
 drop_cols.extend(["TransactionDT", "id_30", "id_31", "id_33"])
 df_train = df_train.drop(drop_cols, axis=1)
 df_test = df_test.drop(drop_cols, axis=1)
+"""
 
 df_train.to_feather("../../data/merge/train_merge.feather")
 df_test.to_feather("../../data/merge/test_merge.feather")

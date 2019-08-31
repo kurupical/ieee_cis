@@ -58,9 +58,6 @@ target_cols = ['card1','card2','card3','card5',
               ]
 df_train, df_test = countencoding(df_train, df_test,
                                   target_cols=target_cols)
-target_cols = ['TEMP__uid','TEMP__uid2','TEMP__uid3', "TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid4",
-               "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"
-              ]
 df_train, df_test = countencoding_agg(df_train, df_test,
                                   target_cols=target_cols,
                                   agg_cols=["TEMP__DT_M", "TEMP__DT_W", "TEMP__DT_D"])
