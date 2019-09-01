@@ -69,7 +69,7 @@ def main():
     df_train, df_test = id_aggregates(df_train, df_test,
                                       agg_cols=agg_cols,
                                       target_cols=target_cols,
-                                      agg_types=["min", "max"])
+                                      agg_types=["min"])
 
     df_train = df_train[[x for x in df_train.columns if x not in original_features]]
     df_test = df_test[[x for x in df_test.columns if x not in original_features]]

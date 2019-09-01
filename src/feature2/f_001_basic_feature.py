@@ -200,7 +200,8 @@ def main():
     df_train, df_test = amt_check(df_train, df_test)
 
     df_train, df_test = remove_minor_cat(df_train, df_test,
-                                         target_cols=["card1", "TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"])
+                                         # target_cols=["card1", "TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"])
+                                         target_cols=["card1"])
 
     print("train shape: {}".format(df_train.shape))
     print(df_train.head(5))

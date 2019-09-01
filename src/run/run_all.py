@@ -5,6 +5,10 @@ from src.feature2 import f_104_pattern
 from src.feature2 import f_104_1_agg_id
 from src.feature2 import f_999_merge
 from src.run import run
+import time
+
+print("P_emaildomain入り+remove_minor_cat=card1のみ")
+# time.sleep(60*60*4)
 
 print("basic_feature")
 f_001_basic_feature.main()
