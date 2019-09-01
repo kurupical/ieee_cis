@@ -106,7 +106,8 @@ def main():
                                       target_cols=["TransactionAmt"],
                                       agg_types=["mean", "std", "cumsum"])
     df_train, df_test = id_aggregates(df_train, df_test,
-                                      agg_cols=["TEMP__uid2+DT+D", "TEMP__uid2+DT+W"],
+                                      agg_cols=["TEMP__uid2+DT+D", "TEMP__uid2+DT+W",
+                                                "TEMP__uid3+DT+D", "TEMP__uid3+DT+W"],
                                       target_cols=["TransactionAmt"],
                                       agg_types=["count", "sum"])
     df_train, df_test = id_aggregates(df_train, df_test,
