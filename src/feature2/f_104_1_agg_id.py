@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import tqdm
 pd.set_option('display.max_columns', 100)
+import os
 
 def _agg(df_train, df_test, agg_col, target_col, agg_type):
 
@@ -51,32 +52,36 @@ def id_aggregates(df_train, df_test, agg_cols, target_cols, agg_types):
                 df_train, df_test = _agg(df_train, df_test, agg_col, target_col, agg_type)
     return df_train, df_test
 
+def main():
+    df_train = pd.read_feather("../../data/baseline/train/baseline.feather")
+    df_train = pd.concat([df_train,
+                          pd.read_feather("../../data/104_pattern/train/pattern.feather")], axis=1)
+    df_test = pd.read_feather("../../data/baseline/test/baseline.feather")
+    df_test = pd.concat([df_test,
+                         pd.read_feather("../../data/104_pattern/test/pattern.feather")], axis=1)
 
-df_train = pd.read_feather("../../data/baseline/train/baseline.feather")
-df_train = pd.concat([df_train,
-                      pd.read_feather("../../data/104_pattern/train/pattern.feather")], axis=1)
-df_test = pd.read_feather("../../data/baseline/test/baseline.feather")
-df_test = pd.concat([df_test,
-                     pd.read_feather("../../data/104_pattern/test/pattern.feather")], axis=1)
+    original_features = df_train.columns
 
-original_features = df_train.columns
+    agg_cols = ["TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid4+DT", "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"]
+    target_cols = [x for x in df_train.columns if "div" not in x and "std" in x]
+    df_train, df_test = id_aggregates(df_train, df_test,
+                                      agg_cols=agg_cols,
+                                      target_cols=target_cols,
+                                      agg_types=["min"])
 
-agg_cols = ["TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"]
-target_cols = [x for x in df_train.columns if "div" not in x and "std" in x]
-df_train, df_test = id_aggregates(df_train, df_test,
-                                  agg_cols=agg_cols,
-                                  target_cols=target_cols,
-                                  agg_types=["min"])
+    df_train = df_train[[x for x in df_train.columns if x not in original_features]]
+    df_test = df_test[[x for x in df_test.columns if x not in original_features]]
 
-df_train = df_train[[x for x in df_train.columns if x not in original_features]]
-df_test = df_test[[x for x in df_test.columns if x not in original_features]]
+    print("train shape: {}".format(df_train.shape))
+    print(df_train.head(5))
+    print(df_train.describe())
+    print("test shape: {}".format(df_test.shape))
+    print(df_test.head(5))
+    print(df_test.describe())
 
-print("train shape: {}".format(df_train.shape))
-print(df_train.head(5))
-print(df_train.describe())
-print("test shape: {}".format(df_test.shape))
-print(df_test.head(5))
-print(df_test.describe())
+    df_train.reset_index(drop=True).to_feather("../../data/104_1_agg_id/train/agg.feather")
+    df_test.reset_index(drop=True).to_feather("../../data/104_1_agg_id/test/agg.feather")
 
-df_train.reset_index(drop=True).to_feather("../../data/104_1_agg_id/train/agg.feather")
-df_test.reset_index(drop=True).to_feather("../../data/104_1_agg_id/test/agg.feather")
+if __name__ == "__main__":
+    print(os.path.basename(__file__))
+    main()

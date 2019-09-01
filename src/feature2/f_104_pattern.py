@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import sys
 import tqdm
-
+import os
 
 def join_string(x):
     return "".join(x.astype(str).values)
@@ -83,28 +83,32 @@ def isDecember_feature(df):
 
     return df
 
+def main():
+    df_train = pd.read_feather("../../data/baseline/train/baseline.feather")
+    df_test = pd.read_feather("../../data/baseline/test/baseline.feather")
 
-df_train = pd.read_feather("../../data/baseline/train/baseline.feather")
-df_test = pd.read_feather("../../data/baseline/test/baseline.feather")
+    original_features = df_train.columns
 
-original_features = df_train.columns
+    df_train = isDecember_feature(df_train)
+    df_test = isDecember_feature(df_test)
 
-df_train = isDecember_feature(df_train)
-df_test = isDecember_feature(df_test)
+    df_train = make_similarV_feature(df_train)
+    df_test = make_similarV_feature(df_test)
 
-df_train = make_similarV_feature(df_train)
-df_test = make_similarV_feature(df_test)
+    df_train = df_train[[x for x in df_train.columns if x not in original_features]]
+    df_test = df_test[[x for x in df_test.columns if x not in original_features]]
 
-df_train = df_train[[x for x in df_train.columns if x not in original_features]]
-df_test = df_test[[x for x in df_test.columns if x not in original_features]]
-
-print("train shape: {}".format(df_train.shape))
-print(df_train.head(5))
-print(df_train.describe())
-print("test shape: {}".format(df_test.shape))
-print(df_test.head(5))
-print(df_test.describe())
+    print("train shape: {}".format(df_train.shape))
+    print(df_train.head(5))
+    print(df_train.describe())
+    print("test shape: {}".format(df_test.shape))
+    print(df_test.head(5))
+    print(df_test.describe())
 
 
-df_train.to_feather("../../data/104_pattern/train/pattern.feather")
-df_test.to_feather("../../data/104_pattern/test/pattern.feather")
+    df_train.to_feather("../../data/104_pattern/train/pattern.feather")
+    df_test.to_feather("../../data/104_pattern/test/pattern.feather")
+
+if __name__ == "__main__":
+    print(os.path.basename(__file__))
+    main()

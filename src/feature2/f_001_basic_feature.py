@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import datetime
 import sys
+import os
 
 def make_nan_pattern(df):
     def join_string(x):
@@ -119,14 +120,25 @@ def identify_id(df):
     df["TEMP__uid4"] = (df["V160"] - df["V159"]).astype(str)
     df["TEMP__uid2+DT"] = df["TEMP__uid2"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D1"]).astype(str)
     df["TEMP__uid3+DT"] = df["TEMP__uid3"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D1"]).astype(str)
+    df["TEMP__uid4+DT"] = df["TEMP__uid3"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D1"]).astype(str)
     df["TEMP__uid2+DT+D"] = df["TEMP__uid2"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D1"]).astype(str)+"_"+df["TEMP__DT_D"].astype(str)
     df["TEMP__uid2+DT+W"] = df["TEMP__uid2"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D1"]).astype(str)+"_"+df["TEMP__DT_W"].astype(str)
     df["TEMP__uid2+DT+M4"] = df["TEMP__uid2+DT"].astype(str)+"_"+(df["M4"]).astype(str)
     df["TEMP__uid3+DT+M4"] = df["TEMP__uid3+DT"].astype(str)+"_"+(df["M4"]).astype(str)
 
-    for col in ["TEMP__uid", "TEMP__uid2", "TEMP__uid3", "TEMP__uid4", "TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid2+DT+D", "TEMP__uid2+DT+W",
+    for col in ["TEMP__uid", "TEMP__uid2", "TEMP__uid3", "TEMP__uid4",
+                "TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid4+DT",
+                "TEMP__uid2+DT+D", "TEMP__uid2+DT+W",
                 "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"]:
         df[col] = df[col].apply(fillna)
+
+    # keyとして使う
+    """
+    df["uid2+DT"] = df["TEMP__uid2"].values
+    df["uid3+DT"] = df["TEMP__uid3"].values
+    df["uid2+DT+M4"] = df["TEMP__uid2+DT"].values
+    df["uid3+DT+M4"] = df["TEMP__uid3+DT"].values
+    """
 
     print("**DEBUG**")
     print(df["TEMP__uid2+DT"].value_counts())
@@ -155,36 +167,42 @@ def fix_data_existing_only_test(df):
 
     return df
 
-df_train = pd.read_feather("../../data/original/train_all.feather")
-df_test = pd.read_feather("../../data/original/test_all.feather")
+def main():
+    df_train = pd.read_feather("../../data/original/train_all.feather")
+    df_test = pd.read_feather("../../data/original/test_all.feather")
 
-df_train = make_nan_pattern(df_train)
-df_test = make_nan_pattern(df_test)
+    df_train = make_nan_pattern(df_train)
+    df_test = make_nan_pattern(df_test)
 
-df_test = fix_data_existing_only_test(df_test)
+    df_test = fix_data_existing_only_test(df_test)
 
-df_train = datefeature(df_train)
-df_test = datefeature(df_test)
+    df_train = datefeature(df_train)
+    df_test = datefeature(df_test)
 
-df_train, df_test = remove_minor_cat(df_train, df_test, target_cols=["card1"])
+    df_train = email_domain(df_train)
+    df_test = email_domain(df_test)
 
-df_train = email_domain(df_train)
-df_test = email_domain(df_test)
+    df_train = device_info(df_train)
+    df_test = device_info(df_test)
 
-df_train = device_info(df_train)
-df_test = device_info(df_test)
+    df_train = identify_id(df_train)
+    df_test = identify_id(df_test)
 
-df_train = identify_id(df_train)
-df_test = identify_id(df_test)
+    df_train = make_C_D_feature(df_train)
+    df_test = make_C_D_feature(df_test)
 
-df_train = make_C_D_feature(df_train)
-df_test = make_C_D_feature(df_test)
+    df_train, df_test = amt_check(df_train, df_test)
 
-df_train, df_test = amt_check(df_train, df_test)
+    df_train, df_test = remove_minor_cat(df_train, df_test,
+                                         target_cols=["card1", "TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"])
 
-print("train shape: {}".format(df_train.shape))
-print(df_train.head(5))
-print("test shape: {}".format(df_test.shape))
-print(df_test.tail(5))
-df_train.to_feather("../../data/baseline/train/baseline.feather")
-df_test.to_feather("../../data/baseline/test/baseline.feather")
+    print("train shape: {}".format(df_train.shape))
+    print(df_train.head(5))
+    print("test shape: {}".format(df_test.shape))
+    print(df_test.tail(5))
+    df_train.to_feather("../../data/baseline/train/baseline.feather")
+    df_test.to_feather("../../data/baseline/test/baseline.feather")
+
+if __name__ == "__main__":
+    print(os.path.basename(__file__))
+    main()
