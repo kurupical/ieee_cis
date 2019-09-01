@@ -75,6 +75,32 @@ def make_similarV_feature(df):
 
     return df
 
+def make_similarV_feature2(df):
+    print(sys._getframe().f_code.co_name)
+
+    def meanstd_diffdiv(group):
+        df["mean_{}".format("_".join(group))] = df[group].mean(axis=1)
+        df["std_{}".format("_".join(group))] = df[group].std(axis=1)
+        for col in group:
+            df["diff_mean_{}".format("_".join(group))] = df[col] - df["mean_{}".format("_".join(group))]
+            df["div_mean_{}".format("_".join(group))] = df[col] / df["mean_{}".format("_".join(group))]
+            df["div_std_{}".format("_".join(group))] = df[col] / df["std_{}".format("_".join(group))]
+
+        return df
+
+    groups = []
+    groups.append(["V144", "V181", "V297", "V328"])
+    groups.append(["V95", "V101", "V143", "V167", "V177", "V279", "V293"])
+    groups.append(["V145", "V183", "V299"])
+    groups.append(["V102", "V178", "V294"])
+    groups.append(["V96", "V323"])
+    groups.append(["V97", "V103", "V280", "V295", "V324"])
+
+    for group in groups:
+        df = meanstd_diffdiv(group)
+
+    return df
+
 def isDecember_feature(df):
     print(sys._getframe().f_code.co_name)
     df["DT_isDecember__ProductCD"] = df["DT_isDecember"].astype(str) + "_" + df["ProductCD"].astype(str)
@@ -94,6 +120,9 @@ def main():
 
     df_train = make_similarV_feature(df_train)
     df_test = make_similarV_feature(df_test)
+
+    df_train = make_similarV_feature2(df_train)
+    df_test = make_similarV_feature2(df_test)
 
     df_train = df_train[[x for x in df_train.columns if x not in original_features]]
     df_test = df_test[[x for x in df_test.columns if x not in original_features]]
