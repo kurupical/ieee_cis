@@ -62,6 +62,7 @@ def make_feature(df):
     df["div_uid2+DT+W_uid+DT_sum"] = \
         df["TransactionAmt_groupbyTEMP__uid2+DT+W_sum"] / df["TransactionAmt_groupbyTEMP__uid2+DT_cumsum"]
 
+    """
     df["div_uid3+DT+D_uid+DT_count"] = \
         df["TransactionAmt_groupbyTEMP__uid3+DT+D_count"] / df["cumcount_TEMP__uid3+DT"]
     df["div_uid3+DT+W_uid+DT_count"] = \
@@ -70,6 +71,7 @@ def make_feature(df):
         df["TransactionAmt_groupbyTEMP__uid3+DT+D_sum"] / df["TransactionAmt_groupbyTEMP__uid3+DT_cumsum"]
     df["div_uid3+DT+W_uid+DT_sum"] = \
         df["TransactionAmt_groupbyTEMP__uid3+DT+W_sum"] / df["TransactionAmt_groupbyTEMP__uid3+DT_cumsum"]
+    """
 
     return df
 
@@ -97,7 +99,7 @@ def main():
     agg_cols = ["card1", "card2", "card3", "card5",
                 "TEMP__uid", "TEMP__uid2", "TEMP__uid3", "TEMP__uid4",
                 "TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid4+DT",
-                # "TEMP__uid2+DT2", "TEMP__uid3+DT2",
+                "TEMP__uid2+DT2", "TEMP__uid3+DT2",
                 "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"]
     df_train, df_test = id_aggregates(df_train, df_test,
                                       agg_cols=agg_cols,
@@ -109,7 +111,8 @@ def main():
                                       agg_types=["mean", "std", "cumsum"])
     df_train, df_test = id_aggregates(df_train, df_test,
                                       agg_cols=["TEMP__uid2+DT+D", "TEMP__uid2+DT+W",
-                                                "TEMP__uid3+DT+D", "TEMP__uid3+DT+W"],
+                                                # "TEMP__uid3+DT+D", "TEMP__uid3+DT+W"
+                                                ],
                                       target_cols=["TransactionAmt"],
                                       agg_types=["count", "sum"])
     df_train, df_test = id_aggregates(df_train, df_test,

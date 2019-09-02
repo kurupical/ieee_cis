@@ -7,8 +7,8 @@ from src.feature2 import f_999_merge
 from src.run import run
 import time
 
-print("P_emaildomain入り+remove_minor_cat=card1のみ")
-# time.sleep(60*60*4)
+# print("DT2すべて開放")
+# time.sleep(60*60*7)
 
 print("basic_feature")
 f_001_basic_feature.main()
