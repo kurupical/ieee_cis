@@ -25,7 +25,7 @@ remove_cols = ["TransactionDT",
                ]
 remove_cols.extend(pd.read_csv("cols.csv")["column"].values)
 
-is_reduce_memory = True
+is_reduce_memory = False
 select_cols = None # 全てのcolumnを選ぶ
 # select_cols = pd.read_csv("cols.csv")["column"].values
 
@@ -96,6 +96,7 @@ def learning(df_train, df_test):
         # X = df_train.drop([id_col, target_col, *remove_cols], axis=1)
         # y = df_train[target_col]
         # if n_fold == 0: continue
+        # if n_fold == 1: continue
 
         lgb_train = lgb.Dataset(data=df_train.drop([id_col, target_col], axis=1).iloc[train_idx], label=df_train[target_col].iloc[train_idx])
         lgb_val = lgb.Dataset(data=df_train.drop([id_col, target_col], axis=1).iloc[val_idx], label=df_train[target_col].iloc[val_idx])
@@ -113,6 +114,7 @@ def learning(df_train, df_test):
              "y": df_train[target_col].iloc[val_idx]}
         ), ignore_index=True)
         w_pred_test = model.predict(df_test.drop([id_col], axis=1))
+        print(w_pred_test.mean())
         df_pred_test["pred_fold{}_{}".format(i, n_fold)] = w_pred_test
         df_importance["fold{}_{}_gain".format(i, n_fold)] = \
             model.feature_importance(importance_type="gain") / model.feature_importance(importance_type="gain").sum()
@@ -123,7 +125,7 @@ def learning(df_train, df_test):
                 {"fold": [n_fold],
                  "random_state": [random_state],
                  "auc_train": [roc_auc_score(df_train[target_col].iloc[train_idx], model.predict(df_train.drop([id_col, target_col], axis=1).iloc[train_idx]))],
-                 "auc_test": [roc_auc_score(df_train[target_col].iloc[val_idx], model.predict(df_train.drop([id_col, target_col], axis=1).iloc[val_idx]))]}
+                 "auc_test": [roc_auc_score(df_train[target_col].iloc[val_idx], w_pred_train)]}
             ),
             ignore_index=True
         )
