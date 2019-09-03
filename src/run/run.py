@@ -95,8 +95,9 @@ def learning(df_train, df_test):
         print("-----------------------------------")
         # X = df_train.drop([id_col, target_col, *remove_cols], axis=1)
         # y = df_train[target_col]
-        # if n_fold == 0: continue
-        # if n_fold == 1: continue
+        if n_fold == 0: continue
+        if n_fold == 1: continue
+        if n_fold == 2: continue
 
         lgb_train = lgb.Dataset(data=df_train.drop([id_col, target_col], axis=1).iloc[train_idx], label=df_train[target_col].iloc[train_idx])
         lgb_val = lgb.Dataset(data=df_train.drop([id_col, target_col], axis=1).iloc[val_idx], label=df_train[target_col].iloc[val_idx])

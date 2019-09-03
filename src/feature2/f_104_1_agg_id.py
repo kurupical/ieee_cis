@@ -62,7 +62,7 @@ def main():
 
     original_features = df_train.columns
 
-    agg_cols = ["TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid4+DT",
+    agg_cols = ["TEMP__uid2+DT", "TEMP__uid3+DT", # "TEMP__uid4+DT",
                 "TEMP__uid2+DT2", "TEMP__uid3+DT2",
                 "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"]
     target_cols = [x for x in df_train.columns if "div" not in x and "std" in x]
