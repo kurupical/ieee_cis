@@ -124,7 +124,7 @@ def main():
                                                 "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"],
                                       target_cols=["C{}".format(x) for x in range(1, 14+1)],
                                       agg_types=["mean", "std"])
-    adf_train, df_test = eplased_day(df_train, df_test,
+    df_train, df_test = eplased_day(df_train, df_test,
                                     agg_cols=["TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"],
                                     target_cols=["D1", "D2", "D3", "D4", "D5", "D11", "D12", "D15"])
     df_train = make_feature(df_train)

@@ -33,6 +33,7 @@ def main():
     merge_features.extend(glob.glob("../../data/103_pattern/train/*.feather"))
     merge_features.extend(glob.glob("../../data/104_pattern/train/*.feather"))
     merge_features.extend(glob.glob("../../data/104_1_agg_id/train/*.feather"))
+    merge_features.extend(glob.glob("../../data/105_pca/train/*.feather"))
     merge_features = [x.replace("train", "{}") for x in merge_features]
 
     df_train = pd.read_feather("../../data/baseline/train/baseline.feather")
@@ -58,6 +59,8 @@ def main():
     df_test = postprocess(df_test)
     df_test = df_test.drop(drop_cols, axis=1)
 
+    print(df_train.shape)
+    print(df_test.shape)
     df_test.to_feather("../../data/merge/test_merge.feather")
 
 if __name__ == "__main__":
