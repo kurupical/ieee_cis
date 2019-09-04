@@ -7,8 +7,8 @@ from src.feature2 import f_999_merge
 from src.run import run
 import time
 
-# print("DT2すべて開放")
-# time.sleep(60*60*7)
+# print("+agg_id(id3+DT+Dぬき)")
+# time.sleep(60*60*3)
 
 print("basic_feature")
 f_001_basic_feature.main()
