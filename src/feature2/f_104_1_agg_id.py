@@ -62,14 +62,14 @@ def main():
 
     original_features = df_train.columns
 
-    agg_cols = ["TEMP__uid2+DT", "TEMP__uid3+DT", # "TEMP__uid4+DT",
-                # "TEMP__uid2+DT2", "TEMP__uid3+DT2",
+    agg_cols = ["TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid4+DT",
+                "TEMP__uid2+DT2", "TEMP__uid3+DT2",
                 "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"]
     target_cols = [x for x in df_train.columns if "div" not in x and "std" in x]
     df_train, df_test = id_aggregates(df_train, df_test,
                                       agg_cols=agg_cols,
                                       target_cols=target_cols,
-                                      agg_types=["min"])
+                                      agg_types=["min", "max"])
 
     df_train = df_train[[x for x in df_train.columns if x not in original_features]]
     df_test = df_test[[x for x in df_test.columns if x not in original_features]]

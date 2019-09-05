@@ -12,6 +12,18 @@ import gc
 import time
 from src.feature.common import reduce_mem_usage
 
+import keras
+import random
+import tensorflow as tf
+import keras.backend as K
+
+from keras.models import Model
+from keras.layers import Dense, Input, Dropout, BatchNormalization, Activation
+from keras.utils.generic_utils import get_custom_objects
+from keras.optimizers import Adam, Nadam
+from keras.callbacks import Callback
+from sklearn.metrics import roc_auc_score
+
 # hyper parameters
 n_folds = 5
 random_state = 0
@@ -25,26 +37,9 @@ remove_cols = ["TransactionDT",
                ]
 remove_cols.extend(pd.read_csv("cols.csv")["column"].values)
 
-is_reduce_memory = True
+is_reduce_memory = False
 select_cols = None # 全てのcolumnを選ぶ
 # select_cols = pd.read_csv("cols.csv")["column"].values
-
-params = {'num_leaves': 256,
-          'min_child_samples': 200,
-          'objective': 'binary',
-          'max_depth': -1,
-          'learning_rate': 0.01,
-          "boosting_type": "gbdt",
-          "subsample": 0.7,
-          "bagging_seed": 11,
-          "metric": 'auc',
-          "verbosity": -1,
-          'reg_alpha': 1,
-          'reg_lambda': 1,
-          'colsample_bytree': 0.05,
-          'early_stopping_rounds': 200,
-          'n_estimators': 20000,
-          }
 
 def _get_categorical_features(df):
     numerics = ['int8', 'int16', 'int32', 'int64', 'float16', 'float32', 'float64']
@@ -63,17 +58,62 @@ def _get_categorical_features(df):
     feats.extend([x for x in cat_cols if x not in feats])
     return feats
 
+class roc_callback(Callback):
+    def __init__(self,training_data,validation_data):
+        self.x_train = training_data[0]
+        self.y_train = training_data[1]
+        self.x_val = validation_data[0]
+        self.y_val = validation_data[1]
+
+
+    def on_train_begin(self, logs={}):
+        return
+
+    def on_train_end(self, logs={}):
+        return
+
+    def on_epoch_begin(self, epoch, logs={}):
+        return
+
+    def on_epoch_end(self, epoch, logs={}):
+        y_pred_train = self.model.predict(self.x_train)
+        y_pred_val = self.model.predict(self.x_val)
+        roc_train = roc_auc_score(self.y_train, y_pred_train)
+        roc_val = roc_auc_score(self.y_val, y_pred_val)
+        print("AUC train: {:.4f}, test: {:.4f}".format(roc_train, roc_val))
+        return
+
+    def on_batch_begin(self, batch, logs={}):
+        return
+
+    def on_batch_end(self, batch, logs={}):
+        return
+
+def focal_loss(gamma=2., alpha=.25):
+    def focal_loss_fixed(y_true, y_pred):
+        pt_1 = tf.where(tf.equal(y_true, 1), y_pred, tf.ones_like(y_pred))
+        pt_0 = tf.where(tf.equal(y_true, 0), y_pred, tf.zeros_like(y_pred))
+        return -K.mean(alpha * K.pow(1. - pt_1, gamma) * K.log(K.epsilon()+pt_1))-K.mean((1-alpha) * K.pow( pt_0, gamma) * K.log(1. - pt_0 + K.epsilon()))
+    return focal_loss_fixed
+
+def get_model(model_name, input_shape):
+
+    if model_name == "basic":
+        inputs = Input(shape=input_shape)
+        x = Dense(512, activation="relu")(inputs)
+        x = BatchNormalization()(x)
+        x = Dense(256, activation="relu")(x)
+        x = BatchNormalization()(x)
+        x = Dropout(0.2)(x)
+        x = Dense(1, activation='sigmoid')(x)
+        model = Model(inputs=inputs, outputs=x)
+        model.compile(
+            optimizer=Adam(),
+            loss=focal_loss()
+        )
+        return model
+
 def learning(df_train, df_test):
-
-    cat_feats = _get_categorical_features(df_test)
-
-    for f in cat_feats:
-        # print(f)
-        df_train[f] = df_train[f].fillna("nan").astype(str)
-        df_test[f] = df_test[f].fillna("nan").astype(str)
-        le = LabelEncoder().fit(df_train[f].append(df_test[f]))
-        df_train[f] = le.transform(df_train[f])
-        df_test[f] = le.transform(df_test[f])
 
     i = 0
     folds = KFold(n_splits=n_folds)
@@ -86,58 +126,50 @@ def learning(df_train, df_test):
     df_pred_test = pd.DataFrame()
     print(df_test)
     df_pred_test[id_col] = df_test[id_col]
-    df_importance = pd.DataFrame()
     df_result = pd.DataFrame()
-    df_importance["column"] = df_train.drop([id_col, target_col], axis=1).columns
     for n_fold, (train_idx, val_idx) in enumerate(folds.split(df_train)):
         print("-----------------------------------")
         print("Fold {} / {}".format(n_fold+1, n_folds))
         print("-----------------------------------")
-        # X = df_train.drop([id_col, target_col, *remove_cols], axis=1)
-        # y = df_train[target_col]
-        # if n_fold == 0: continue
-        # if n_fold == 1: continue
-        # if n_fold == 2: continue
-        # if n_fold == 4: continue
 
-        lgb_train = lgb.Dataset(data=df_train.drop([id_col, target_col], axis=1).iloc[train_idx], label=df_train[target_col].iloc[train_idx])
-        lgb_val = lgb.Dataset(data=df_train.drop([id_col, target_col], axis=1).iloc[val_idx], label=df_train[target_col].iloc[val_idx])
+        X_train = df_train.drop([id_col, target_col], axis=1).iloc[train_idx].values
+        y_train = df_train[target_col].iloc[train_idx].values
+        X_val = df_train.drop([id_col, target_col], axis=1).iloc[val_idx].values
+        y_val = df_train[target_col].iloc[val_idx].values
 
-        model = lgb.train(copy.copy(params),
-                          lgb_train,
-                          categorical_feature=cat_feats,
-                          valid_sets=[lgb_train, lgb_val],
-                          verbose_eval=100)
+        model = get_model(model_name="basic", input_shape=(len(X_train[0]), ))
+        model.fit(X_train, y_train,
+                  epochs=20, batch_size=1024,
+                  validation_data=(X_val, y_val),
+                  verbose=True,
+                  callbacks=[roc_callback(training_data=(X_train, y_train), validation_data=(X_val, y_val))]
+                )
 
-        w_pred_train = model.predict(df_train.drop([id_col, target_col], axis=1).iloc[val_idx])
+        w_pred_train = model.predict(X_val)
         df_pred_train = df_pred_train.append(pd.DataFrame(
             {id_col: df_train[id_col].iloc[val_idx],
              "pred": w_pred_train,
              "y": df_train[target_col].iloc[val_idx]}
         ), ignore_index=True)
-        w_pred_test = model.predict(df_test.drop([id_col], axis=1))
+        w_pred_test = model.predict(df_test.drop([id_col], axis=1).values)
         print(w_pred_test.mean())
         df_pred_test["pred_fold{}_{}".format(i, n_fold)] = w_pred_test
-        df_importance["fold{}_{}_gain".format(i, n_fold)] = \
-            model.feature_importance(importance_type="gain") / model.feature_importance(importance_type="gain").sum()
-        df_importance["fold{}_{}_split".format(i, n_fold)] = \
-            model.feature_importance(importance_type="split") / model.feature_importance(importance_type="split").sum()
         df_result = df_result.append(
             pd.DataFrame(
                 {"fold": [n_fold],
                  "random_state": [random_state],
-                 "auc_train": [roc_auc_score(df_train[target_col].iloc[train_idx], model.predict(df_train.drop([id_col, target_col], axis=1).iloc[train_idx]))],
-                 "auc_test": [roc_auc_score(df_train[target_col].iloc[val_idx], w_pred_train)]}
+                 "auc_train": [roc_auc_score(y_train, model.predict(X_train))],
+                 "auc_test": [roc_auc_score(y_val, w_pred_train)]}
             ),
             ignore_index=True
         )
-        del w_pred_train, w_pred_test, lgb_train, lgb_val, model
+        del w_pred_train, w_pred_test, model
         gc.collect()
 
     df_submit = pd.DataFrame()
     df_submit[id_col] = df_test[id_col]
     df_submit[target_col] = df_pred_test.drop(id_col, axis=1).mean(axis=1)
-    return df_submit, df_pred_train, df_pred_test, df_importance, df_result
+    return df_submit, df_pred_train, df_pred_test, df_result
 
 def main():
     # print("waiting...")
@@ -163,8 +195,8 @@ def main():
         df_train = reduce_mem_usage(df_train)
         df_test = reduce_mem_usage(df_test)
 
-    sub, pred_train, pred_test, imp, result= learning(df_train=df_train,
-                                                      df_test=df_test)
+    sub, pred_train, pred_test, result = learning(df_train=df_train,
+                                                  df_test=df_test)
 
     df_submit = df_submit.append(sub, ignore_index=True)
     df_pred_train = df_pred_train.append(pred_train, ignore_index=True)
