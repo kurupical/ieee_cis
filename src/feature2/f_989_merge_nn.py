@@ -35,8 +35,8 @@ def sparce_pca(df_train, df_test, n_components=30):
         valid = valid[valid > 50]
         valid = list(valid.index)
 
-        df_train[col] = np.where(df_train[col].isin(valid), df_train[col], np.nan)
-        df_test[col] = np.where(df_test[col].isin(valid), df_test[col], np.nan)
+        df_train[col] = np.where(df_train[col].isin(valid), df_train[col], "others")
+        df_test[col] = np.where(df_test[col].isin(valid), df_test[col], "others")
 
     X_all = df_train.append(df_test)[cols]
     X_all = pd.get_dummies(X_all, columns=cols, sparse=True)
@@ -104,6 +104,8 @@ def main():
 
     df_train_pca, df_test_pca = sparce_pca(df_train, df_test)
 
+    df_train_pca.to_feather("../../data/989_merge/train_pca.feather")
+    df_test_pca.to_feather("../../data/989_merge/test_pca.feather")
 
     # 2.連続値の特徴量 + pcaデータを結合
     df_train = load_data("train", merge_features).drop(cat_feats, axis=1)

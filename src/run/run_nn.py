@@ -11,6 +11,7 @@ from tqdm import tqdm
 import gc
 import time
 from src.feature.common import reduce_mem_usage
+from sklearn.preprocessing import StandardScaler
 
 import keras
 import random
@@ -21,7 +22,7 @@ from keras.models import Model
 from keras.layers import Dense, Input, Dropout, BatchNormalization, Activation
 from keras.utils.generic_utils import get_custom_objects
 from keras.optimizers import Adam, Nadam
-from keras.callbacks import Callback
+from keras.callbacks import Callback, ReduceLROnPlateau, EarlyStopping
 from sklearn.metrics import roc_auc_score
 
 # hyper parameters
@@ -89,6 +90,9 @@ class roc_callback(Callback):
     def on_batch_end(self, batch, logs={}):
         return
 
+def custom_gelu(x):
+    return 0.5 * x * (1 + tf.tanh(tf.sqrt(2 / np.pi) * (x + 0.044715 * tf.pow(x, 3))))
+
 def focal_loss(gamma=2., alpha=.25):
     def focal_loss_fixed(y_true, y_pred):
         pt_1 = tf.where(tf.equal(y_true, 1), y_pred, tf.ones_like(y_pred))
@@ -100,17 +104,19 @@ def get_model(model_name, input_shape):
 
     if model_name == "basic":
         inputs = Input(shape=input_shape)
-        x = Dense(512, activation="relu")(inputs)
+        x = Dense(512, activation=Activation(custom_gelu))(inputs)
         x = BatchNormalization()(x)
-        x = Dense(256, activation="relu")(x)
+        x = Dropout(0.3)(x)
+        x = Dense(256, activation=Activation(custom_gelu))(x)
         x = BatchNormalization()(x)
         x = Dropout(0.2)(x)
         x = Dense(1, activation='sigmoid')(x)
         model = Model(inputs=inputs, outputs=x)
         model.compile(
-            optimizer=Adam(),
+            optimizer=Nadam(),
             loss=focal_loss()
         )
+        model.summary()
         return model
 
 def learning(df_train, df_test):
@@ -132,26 +138,34 @@ def learning(df_train, df_test):
         print("Fold {} / {}".format(n_fold+1, n_folds))
         print("-----------------------------------")
 
-        X_train = df_train.drop([id_col, target_col], axis=1).iloc[train_idx].values
+        X_train = df_train.drop([id_col, target_col], axis=1).iloc[train_idx].replace(np.inf, 0).replace(-np.inf, 0).fillna(0).values.astype(np.float32)
         y_train = df_train[target_col].iloc[train_idx].values
-        X_val = df_train.drop([id_col, target_col], axis=1).iloc[val_idx].values
+        X_val = df_train.drop([id_col, target_col], axis=1).iloc[val_idx].replace(np.inf, 0).replace(-np.inf, 0).fillna(0).values.astype(np.float32)
         y_val = df_train[target_col].iloc[val_idx].values
-
+        X_test = df_test.drop([id_col], axis=1).replace(np.inf, 0).replace(-np.inf, 0).values.astype(np.float32)
+        sc = StandardScaler().fit(np.concatenate([X_train, X_val, X_test]))
+        X_train = sc.transform(X_train)
+        X_val = sc.transform(X_val)
+        X_test = sc.transform(X_test)
         model = get_model(model_name="basic", input_shape=(len(X_train[0]), ))
         model.fit(X_train, y_train,
-                  epochs=20, batch_size=1024,
+                  epochs=20, batch_size=2048,
                   validation_data=(X_val, y_val),
                   verbose=True,
-                  callbacks=[roc_callback(training_data=(X_train, y_train), validation_data=(X_val, y_val))]
+                  callbacks=[roc_callback(training_data=(X_train, y_train), validation_data=(X_val, y_val)),
+                             ReduceLROnPlateau(monitor="val_loss", factor=0.1, patience=3, verbose=1),
+                             EarlyStopping(monitor="val_loss", patience=6, verbose=1)]
                 )
 
-        w_pred_train = model.predict(X_val)
+        w_pred_train = model.predict(X_val).reshape(-1)
+        print(w_pred_train)
         df_pred_train = df_pred_train.append(pd.DataFrame(
             {id_col: df_train[id_col].iloc[val_idx],
              "pred": w_pred_train,
              "y": df_train[target_col].iloc[val_idx]}
         ), ignore_index=True)
-        w_pred_test = model.predict(df_test.drop([id_col], axis=1).values)
+
+        w_pred_test = model.predict(X_test).reshape(-1)
         print(w_pred_test.mean())
         df_pred_test["pred_fold{}_{}".format(i, n_fold)] = w_pred_test
         df_result = df_result.append(
@@ -183,9 +197,9 @@ def main():
     df_importance = pd.DataFrame()
 
     print("load train dataset")
-    df_train = pd.read_feather("../../data/merge/train_merge.feather").drop(remove_cols, axis=1, errors="ignore")
+    df_train = pd.read_feather("../../data/989_merge/train_merge.feather").drop(remove_cols, axis=1, errors="ignore")
     print("load test dataset")
-    df_test = pd.read_feather("../../data/merge/test_merge.feather").drop(remove_cols, axis=1, errors="ignore")
+    df_test = pd.read_feather("../../data/989_merge/test_merge.feather").drop(remove_cols, axis=1, errors="ignore")
 
     if select_cols is not None:
         df_train = df_train[list(select_cols) + [target_col] + [id_col]]
@@ -201,7 +215,6 @@ def main():
     df_submit = df_submit.append(sub, ignore_index=True)
     df_pred_train = df_pred_train.append(pred_train, ignore_index=True)
     df_pred_test = df_pred_test.append(pred_test, ignore_index=True)
-    imp.to_csv("{}/importance.csv".format(output_dir))
 
     df_submit.to_csv("{}/submit.csv".format(output_dir), index=False)
     df_pred_train.to_csv("{}/predict_train.csv".format(output_dir), index=False)
