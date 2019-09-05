@@ -48,6 +48,7 @@ def main():
     df_train = df_train.drop(drop_cols, axis=1)
     df_train.to_feather("../../data/merge/train_merge.feather")
 
+    print(df_train.shape)
     del df_train
     gc.collect()
 
@@ -59,7 +60,6 @@ def main():
     df_test = postprocess(df_test)
     df_test = df_test.drop(drop_cols, axis=1)
 
-    print(df_train.shape)
     print(df_test.shape)
     df_test.to_feather("../../data/merge/test_merge.feather")
 
