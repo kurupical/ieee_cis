@@ -36,11 +36,11 @@ remove_cols = ["TransactionDT",
                # "card1", "card2", "card3", "card5",
                # "addr1", "addr2"
                ]
-remove_cols.extend(pd.read_csv("cols.csv")["column"].values)
+# remove_cols.extend(pd.read_csv("cols.csv")["column"].values)
 
 is_reduce_memory = False
 select_cols = None # 全てのcolumnを選ぶ
-# select_cols = pd.read_csv("cols.csv")["column"].values
+select_cols = pd.read_csv("cols_nn.csv")["column"].values
 
 def _get_categorical_features(df):
     numerics = ['int8', 'int16', 'int32', 'int64', 'float16', 'float32', 'float64']

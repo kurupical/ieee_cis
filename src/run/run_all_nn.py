@@ -4,8 +4,8 @@ from src.run import run_nn
 
 import time
 
-print("waiting..")
-time.sleep(60*60*3)
+# print("waiting..")
+# time.sleep(60*60*3)
 
 # print("989_merge_nn")
 # f_989_merge_nn.main()
@@ -15,6 +15,6 @@ time.sleep(60*60*3)
 # run_nn.main(model_name="basic_deep")
 print("run_nn")
 run_nn.main(model_name="basic_deep2")
-print("run_nn")
-run_nn.main(model_name="basic_deep2_ce")
+# print("run_nn")
+# run_nn.main(model_name="basic_deep2_ce")
 
