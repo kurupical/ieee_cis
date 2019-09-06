@@ -93,37 +93,19 @@ def main():
 
     original_features = df_train.columns
 
-    agg_cols = ["card1", "card2", "card3", "card5",
-                "TEMP__uid", "TEMP__uid2", "TEMP__uid3", "TEMP__uid4",
-                "TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid4+DT",
-                "TEMP__uid2+DT2", "TEMP__uid3+DT2",
-                "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"]
     df_train, df_test = id_aggregates(df_train, df_test,
-                                      agg_cols=agg_cols,
-                                      target_cols=["TransactionAmt"],
-                                      agg_types=["cumcount"])
-    df_train, df_test = id_aggregates(df_train, df_test,
-                                      agg_cols=agg_cols,
-                                      target_cols=["TransactionAmt"],
-                                      agg_types=["mean", "std", "cumsum"])
-    df_train, df_test = id_aggregates(df_train, df_test,
-                                      agg_cols=["TEMP__uid2+DT+D", "TEMP__uid2+DT+W",
-                                                "TEMP__uid3+DT+D", "TEMP__uid3+DT+W"
-                                                ],
-                                      target_cols=["TransactionAmt"],
-                                      agg_types=["count", "sum"])
-    df_train, df_test = id_aggregates(df_train, df_test,
-                                      agg_cols=["DT_isDecember", "TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid4+DT",
+                                      agg_cols=["TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid4+DT",
                                                 "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"],
-                                      target_cols=["id_{0:02d}".format(x) for x in range(1, 11+1)],
+                                      target_cols=["D{}".format(x) for x in range(1, 15+1)],
                                       agg_types=["mean", "std"])
     df_train, df_test = id_aggregates(df_train, df_test,
                                       agg_cols=["TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid4+DT",
                                                 "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"],
-                                      target_cols=["C{}".format(x) for x in range(1, 14+1)],
+                                      target_cols=["V246", "V258", "V201", "V149", "V190", "V200", "V317", "V45"],
                                       agg_types=["mean", "std"])
-    df_train = make_feature(df_train)
-    df_test = make_feature(df_test)
+    df_train, df_test = eplased_day(df_train, df_test,
+                                    agg_cols=["TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid4+DT", "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"],
+                                    target_cols=["D1", "D2", "D3", "D4", "D5", "D11", "D12", "D15"])
 
     df_train = df_train[[x for x in df_train.columns if x not in original_features]]
     df_test = df_test[[x for x in df_test.columns if x not in original_features]]
@@ -135,8 +117,8 @@ def main():
     print(df_test.head(5))
     print(df_test.describe())
 
-    df_train.reset_index(drop=True).to_feather("../../data/101_agg_id/train/agg.feather")
-    df_test.reset_index(drop=True).to_feather("../../data/101_agg_id/test/agg.feather")
+    df_train.reset_index(drop=True).to_feather("../../data/101_agg_id/train/agg_2.feather")
+    df_test.reset_index(drop=True).to_feather("../../data/101_agg_id/test/agg_2.feather")
 
 if __name__ == "__main__":
     print(os.path.basename(__file__))

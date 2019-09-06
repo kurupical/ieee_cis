@@ -18,11 +18,11 @@ import random
 import tensorflow as tf
 import keras.backend as K
 
-from keras.models import Model
+from keras.models import Model, load_model
 from keras.layers import Dense, Input, Dropout, BatchNormalization, Activation
 from keras.utils.generic_utils import get_custom_objects
 from keras.optimizers import Adam, Nadam
-from keras.callbacks import Callback, ReduceLROnPlateau, EarlyStopping
+from keras.callbacks import Callback, ReduceLROnPlateau, EarlyStopping, ModelCheckpoint
 from sklearn.metrics import roc_auc_score
 
 # hyper parameters
@@ -119,7 +119,79 @@ def get_model(model_name, input_shape):
         model.summary()
         return model
 
-def learning(df_train, df_test):
+    if model_name == "basic_deep":
+        inputs = Input(shape=input_shape)
+        x = Dense(1024, activation=Activation(custom_gelu))(inputs)
+        x = BatchNormalization()(x)
+        x = Dropout(0.3)(x)
+        x = Dense(512, activation=Activation(custom_gelu))(x)
+        x = BatchNormalization()(x)
+        x = Dropout(0.2)(x)
+        x = Dense(256, activation=Activation(custom_gelu))(x)
+        x = BatchNormalization()(x)
+        x = Dropout(0.2)(x)
+        x = Dense(1, activation='sigmoid')(x)
+        model = Model(inputs=inputs, outputs=x)
+        model.compile(
+            optimizer=Nadam(),
+            loss=focal_loss()
+        )
+        model.summary()
+        return model
+
+    if model_name == "basic_deep2":
+        inputs = Input(shape=input_shape)
+        x = Dense(1024, activation=Activation(custom_gelu))(inputs)
+        x = BatchNormalization()(x)
+        x = Dropout(0.3)(x)
+        x = Dense(512, activation=Activation(custom_gelu))(x)
+        x = BatchNormalization()(x)
+        x = Dropout(0.2)(x)
+        x = Dense(256, activation=Activation(custom_gelu))(x)
+        x = BatchNormalization()(x)
+        x = Dropout(0.2)(x)
+        x = Dense(128, activation=Activation(custom_gelu))(x)
+        x = BatchNormalization()(x)
+        x = Dropout(0.1)(x)
+        x = Dense(64, activation=Activation(custom_gelu))(x)
+        x = BatchNormalization()(x)
+        x = Dropout(0.05)(x)
+        x = Dense(1, activation='sigmoid')(x)
+        model = Model(inputs=inputs, outputs=x)
+        model.compile(
+            optimizer=Nadam(),
+            loss=focal_loss()
+        )
+        model.summary()
+        return model
+
+    if model_name == "basic_deep2_ce":
+        inputs = Input(shape=input_shape)
+        x = Dense(1024, activation=Activation(custom_gelu))(inputs)
+        x = BatchNormalization()(x)
+        x = Dropout(0.3)(x)
+        x = Dense(512, activation=Activation(custom_gelu))(x)
+        x = BatchNormalization()(x)
+        x = Dropout(0.2)(x)
+        x = Dense(256, activation=Activation(custom_gelu))(x)
+        x = BatchNormalization()(x)
+        x = Dropout(0.2)(x)
+        x = Dense(128, activation=Activation(custom_gelu))(x)
+        x = BatchNormalization()(x)
+        x = Dropout(0.1)(x)
+        x = Dense(64, activation=Activation(custom_gelu))(x)
+        x = BatchNormalization()(x)
+        x = Dropout(0.05)(x)
+        x = Dense(1, activation='sigmoid')(x)
+        model = Model(inputs=inputs, outputs=x)
+        model.compile(
+            optimizer=Nadam(),
+            loss="binary_crossentropy"
+        )
+        model.summary()
+        return model
+
+def learning(df_train, df_test, model_name, output_dir):
 
     i = 0
     folds = KFold(n_splits=n_folds)
@@ -142,12 +214,12 @@ def learning(df_train, df_test):
         y_train = df_train[target_col].iloc[train_idx].values
         X_val = df_train.drop([id_col, target_col], axis=1).iloc[val_idx].replace(np.inf, 0).replace(-np.inf, 0).fillna(0).values.astype(np.float32)
         y_val = df_train[target_col].iloc[val_idx].values
-        X_test = df_test.drop([id_col], axis=1).replace(np.inf, 0).replace(-np.inf, 0).values.astype(np.float32)
+        X_test = df_test.drop([id_col], axis=1).replace(np.inf, 0).replace(-np.inf, 0).fillna(0).values.astype(np.float32)
         sc = StandardScaler().fit(np.concatenate([X_train, X_val, X_test]))
         X_train = sc.transform(X_train)
         X_val = sc.transform(X_val)
         X_test = sc.transform(X_test)
-        model = get_model(model_name="basic", input_shape=(len(X_train[0]), ))
+        model = get_model(model_name=model_name, input_shape=(len(X_train[0]), ))
         model.fit(X_train, y_train,
                   epochs=20, batch_size=2048,
                   validation_data=(X_val, y_val),
@@ -155,8 +227,12 @@ def learning(df_train, df_test):
                   callbacks=[roc_callback(training_data=(X_train, y_train), validation_data=(X_val, y_val)),
                              ReduceLROnPlateau(monitor="val_loss", factor=0.1, patience=3, verbose=1),
                              EarlyStopping(monitor="val_loss", patience=6, verbose=1)]
+                             # TODO: 自作関数もsaveできるようにする。。
+                             # ModelCheckpoint("{}/best.hdf5".format(output_dir), monitor="val_loss", verbose=0,
+                             #                 save_best_only=True)]
                 )
 
+        # model = load_model("{}/bset.hdf5".format(output_dir))
         w_pred_train = model.predict(X_val).reshape(-1)
         print(w_pred_train)
         df_pred_train = df_pred_train.append(pd.DataFrame(
@@ -185,7 +261,7 @@ def learning(df_train, df_test):
     df_submit[target_col] = df_pred_test.drop(id_col, axis=1).mean(axis=1)
     return df_submit, df_pred_train, df_pred_test, df_result
 
-def main():
+def main(model_name="basic"):
     # print("waiting...")
     # time.sleep(60*60*0.5)
     output_dir = "../../output/{}".format(dt.now().strftime("%Y%m%d%H%M%S"))
@@ -210,7 +286,9 @@ def main():
         df_test = reduce_mem_usage(df_test)
 
     sub, pred_train, pred_test, result = learning(df_train=df_train,
-                                                  df_test=df_test)
+                                                  df_test=df_test,
+                                                  model_name=model_name,
+                                                  output_dir=output_dir)
 
     df_submit = df_submit.append(sub, ignore_index=True)
     df_pred_train = df_pred_train.append(pred_train, ignore_index=True)
@@ -222,4 +300,4 @@ def main():
     result.to_csv("{}/result.csv".format(output_dir), index=False)
 
 if __name__ == "__main__":
-    main()
+    main("basic_deep2_ce")

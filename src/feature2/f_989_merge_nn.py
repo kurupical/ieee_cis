@@ -68,9 +68,6 @@ def postprocess(df):
 
     return df
 
-print("waiting...")
-time.sleep(60*60*3)
-
 def main():
     def load_data(mode, merge_features):
         df = pd.read_feather("../../data/baseline/{}/baseline.feather".format(mode))
