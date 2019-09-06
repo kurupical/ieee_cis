@@ -42,9 +42,13 @@ def main():
     dfs.extend([pd.read_feather(x.format("train")) for x in merge_features])
     df_train = pd.concat(dfs, axis=1)
     df_train = postprocess(df_train)
+
+    del dfs
+    gc.collect()
     drop_cols = [x for x in df_train.columns if x[:6] in ["TEMP__"]]
-    print("drop_cols: {}".format(drop_cols))
     drop_cols.extend(["TransactionDT", "id_30", "id_31", "id_33"])
+    drop_cols.extend(pd.read_csv("cols.csv")["column"].values)
+    print("drop_cols: {}".format(drop_cols))
     df_train = df_train.drop(drop_cols, axis=1)
     df_train.to_feather("../../data/merge/train_merge.feather")
 
@@ -57,6 +61,8 @@ def main():
     dfs = [df_test]
     dfs.extend([pd.read_feather(x.format("test")) for x in merge_features])
     df_test = pd.concat(dfs, axis=1)
+    del dfs
+    gc.collect()
     df_test = postprocess(df_test)
     df_test = df_test.drop(drop_cols, axis=1)
 
