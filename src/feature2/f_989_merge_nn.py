@@ -90,7 +90,7 @@ def main():
     df_train = load_data("train", merge_features)
     drop_cols = [x for x in df_train.columns if x[:6] in ["TEMP__"]]
     drop_cols.extend(["TransactionDT", "id_30", "id_31", "id_33"])
-    drop_cols.extend(pd.read_csv("cols.csv")["column"].values)
+    drop_cols.extend(pd.read_csv("cols_nn.csv")["column"].values)
     df_train = df_train.drop(drop_cols, axis=1)
     cat_feats = _get_categorical_features(df_train.drop("TransactionID", axis=1))
     df_train = df_train[cat_feats]
