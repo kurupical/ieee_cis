@@ -48,6 +48,7 @@ def main():
     drop_cols = [x for x in df_train.columns if x[:6] in ["TEMP__"]]
     drop_cols.extend(["TransactionDT", "id_30", "id_31", "id_33"])
     drop_cols.extend(pd.read_csv("cols.csv")["column"].values)
+    print(df_train.shape)
     print("drop_cols: {}".format(drop_cols))
     df_train = df_train.drop(drop_cols, axis=1)
     df_train.to_feather("../../data/merge/train_merge.feather")

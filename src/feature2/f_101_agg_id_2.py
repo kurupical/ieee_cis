@@ -79,18 +79,18 @@ def eplased_day(df_train, df_test, agg_cols, target_cols):
     :return:
     """
 
-    df = pd.concat([df_train, df_test]).reset_index(drop=True)
     for agg_col in agg_cols:
         for target_col in target_cols:
+            w_df = pd.concat([df_train[[agg_col, target_col]], df_test[[agg_col, target_col]]]).reset_index(drop=True)
             col_name = "diff_{}_{}min_groupby{}".format(target_col, target_col, agg_col)
-            df[col_name] = df[target_col].values - df[[agg_col, target_col]].groupby(agg_col).transform("min").values.reshape(-1)
-
-    return df.head(len(df_train)), df.tail(len(df_test))
+            w_df[col_name] = w_df[target_col].values - w_df[[agg_col, target_col]].groupby(agg_col).transform("min").values.reshape(-1)
+            df_train[col_name] = w_df[col_name].head(len(df_train))
+            df_test[col_name] = w_df[col_name].tail(len(df_test))
+    return df_train, df_test
 
 def main():
     df_train = pd.read_feather("../../data/baseline/train/baseline.feather")
     df_test = pd.read_feather("../../data/baseline/test/baseline.feather")
-
     original_features = df_train.columns
 
     df_train, df_test = id_aggregates(df_train, df_test,
@@ -102,8 +102,10 @@ def main():
     df_train, df_test = id_aggregates(df_train, df_test,
                                       agg_cols=["TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid4+DT",
                                                 "TEMP__uid2+DT2", "TEMP__uid3+DT2",
-                                                "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"],
-                                      target_cols=["V246", "V258", "V201", "V149", "V190", "V200", "V317", "V45"],
+                                                "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"
+                                                ],
+                                      target_cols=["V246", "V258", "V201", "V149", "V190", "V200", "V317", "V45", "V189",
+                                                   "V243", "V197", "V244", "V70", "V44"],
                                       agg_types=["mean", "std"])
     df_train, df_test = eplased_day(df_train, df_test,
                                     agg_cols=["TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid4+DT",

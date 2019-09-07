@@ -28,7 +28,7 @@ def _get_categorical_features(df):
 def sparce_pca(df_train, df_test, n_components=30):
 
     print("sparce_pca")
-    cols = ["card1", "card2", "card3", "card4", "card5", "card6", "addr1", "addr2"]
+    cols = ["card1", "card2", "card3", "card4", "card5", "card6", "addr1", "addr2", "id_19", "DeviceInfo"]
     for col in cols:
         valid = pd.concat([df_train[[col]], df_test[[col]]])
         valid = valid[col].value_counts()
@@ -90,6 +90,7 @@ def main():
     df_train = load_data("train", merge_features)
     drop_cols = [x for x in df_train.columns if x[:6] in ["TEMP__"]]
     drop_cols.extend(["TransactionDT", "id_30", "id_31", "id_33"])
+    drop_cols.extend(pd.read_csv("cols.csv")["column"].values)
     df_train = df_train.drop(drop_cols, axis=1)
     cat_feats = _get_categorical_features(df_train.drop("TransactionID", axis=1))
     df_train = df_train[cat_feats]
@@ -106,7 +107,6 @@ def main():
 
     # 2.連続値の特徴量 + pcaデータを結合
     df_train = load_data("train", merge_features).drop(cat_feats, axis=1)
-    df_train = df_train.drop(drop_cols, axis=1)
     df_train = pd.concat([df_train, df_train_pca], axis=1)
     # assert(len(df_train) == 590540)
 
