@@ -25,7 +25,7 @@ remove_cols = ["TransactionDT",
                ]
 remove_cols.extend(pd.read_csv("cols.csv")["column"].values)
 
-is_reduce_memory = True
+is_reduce_memory = False
 select_cols = None # 全てのcolumnを選ぶ
 # select_cols = pd.read_csv("cols.csv")["column"].values
 

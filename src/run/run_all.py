@@ -32,7 +32,7 @@ print("105_1_agg_id")
 f_105_pca.main()
 
 print("999_merge")
-# f_999_merge.main()
+f_999_merge.main()
 print("run!")
 run.main()
 print("run!")
