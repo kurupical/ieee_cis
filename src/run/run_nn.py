@@ -39,8 +39,8 @@ remove_cols = ["TransactionDT",
 # remove_cols.extend(pd.read_csv("cols.csv")["column"].values)
 
 is_reduce_memory = False
-# select_cols = None # 全てのcolumnを選ぶ
-select_cols = pd.read_csv("cols_nn.csv")["column"].values
+select_cols = None # 全てのcolumnを選ぶ
+# select_cols = pd.read_csv("cols_nn.csv")["column"].values
 
 def _get_categorical_features(df):
     numerics = ['int8', 'int16', 'int32', 'int64', 'float16', 'float32', 'float64']
@@ -100,7 +100,7 @@ def focal_loss(gamma=2., alpha=.25):
         return -K.mean(alpha * K.pow(1. - pt_1, gamma) * K.log(K.epsilon()+pt_1))-K.mean((1-alpha) * K.pow( pt_0, gamma) * K.log(1. - pt_0 + K.epsilon()))
     return focal_loss_fixed
 
-def get_model(model_name, input_shape, params):
+def get_model(model_name, input_shape):
     get_custom_objects().update({'custom_gelu': custom_gelu})
     get_custom_objects().update({'focal_loss_fn': focal_loss()})
 
@@ -304,4 +304,4 @@ def main(model_name="basic"):
     result.to_csv("{}/result.csv".format(output_dir), index=False)
 
 if __name__ == "__main__":
-    main("basic")
+    main("basic_deep2")
