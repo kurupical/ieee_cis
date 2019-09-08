@@ -117,12 +117,12 @@ def identify_id(df):
     print(sys._getframe().f_code.co_name)
     df["TEMP__uid"] = df['card1'].astype(str)+'_'+df['card2'].astype(str)
     df["TEMP__uid2"] = df["TEMP__uid"].astype(str)+"_"+df['card3'].astype(str)+'_'+df['card5'].astype(str)+"_"# +df["P_emaildomain"].astype(str)
-    df["TEMP__uid3"] = df["TEMP__uid2"].astype(str)+"_"+df['addr1'].astype(str).fillna("none")+'_'+df['addr2'].astype(str).fillna("none")
+    df["TEMP__uid3"] = df["TEMP__uid2"].astype(str)+"_"+df['addr1'].astype(str)+'_'+df['addr2'].astype(str)
     df["TEMP__uid4"] = (df["V160"] - df["V159"]).astype(str)
     df["TEMP__uid2+DT"] = df["TEMP__uid2"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D1"]).astype(str)
     df["TEMP__uid3+DT"] = df["TEMP__uid3"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D1"]).astype(str)
-    df["TEMP__uid2+DT2"] = df["TEMP__uid2+DT"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D10"]).astype(str).fillna("none")
-    df["TEMP__uid3+DT2"] = df["TEMP__uid3+DT"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D10"]).astype(str).fillna("none")
+    df["TEMP__uid2+DT2"] = df["TEMP__uid2+DT"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D10"]).astype(str)
+    df["TEMP__uid3+DT2"] = df["TEMP__uid3+DT"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D10"]).astype(str)
     df["TEMP__uid4+DT"] = df["TEMP__uid4"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D1"]).astype(str)
     df["TEMP__uid2+DT+D"] = df["TEMP__uid2"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D1"]).astype(str)+"_"+df["TEMP__DT_D"].astype(str)
     df["TEMP__uid2+DT+W"] = df["TEMP__uid2"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D1"]).astype(str)+"_"+df["TEMP__DT_W"].astype(str)
@@ -132,11 +132,10 @@ def identify_id(df):
     df["TEMP__uid3+DT+M4"] = df["TEMP__uid3+DT"].astype(str)+"_"+(df["M4"]).astype(str)
 
     for col in ["TEMP__uid", "TEMP__uid2", "TEMP__uid3", "TEMP__uid4",
-                "TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid4+DT",
-                "TEMP__uid2+DT2", "TEMP__uid3+DT2",
+                "TEMP__uid2+DT", "TEMP__uid4+DT",
                 "TEMP__uid2+DT+D", "TEMP__uid2+DT+W",
-                "TEMP__uid3+DT+D", "TEMP__uid3+DT+W",
-                "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"]:
+                "TEMP__uid2+DT+M4"
+                ]:
         df[col] = df[col].apply(fillna)
 
     # keyとして使う
