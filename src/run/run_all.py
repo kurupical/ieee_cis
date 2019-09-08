@@ -14,9 +14,8 @@ from src.run import run_timesplit
 
 import time
 
-print("waiting..")
-# time.sleep(60*60*1)
-"""
+print("waiting..D1zerotoD10")
+time.sleep(60*60*5)
 print("basic_feature")
 f_001_basic_feature.main()
 
@@ -37,7 +36,6 @@ print("104_1_agg_id")
 f_104_1_agg_id.main()
 print("105_1_agg_id")
 f_105_pca.main()
-"""
 print("999_merge")
 f_999_merge.main(nrows=None)
 print("run!")
