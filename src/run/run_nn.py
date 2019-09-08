@@ -39,8 +39,8 @@ remove_cols = ["TransactionDT",
 # remove_cols.extend(pd.read_csv("cols.csv")["column"].values)
 
 is_reduce_memory = False
-select_cols = None # 全てのcolumnを選ぶ
-# select_cols = pd.read_csv("cols_nn.csv")["column"].values
+# select_cols = None # 全てのcolumnを選ぶ
+select_cols = pd.read_csv("cols_nn.csv")["column"].values
 
 def _get_categorical_features(df):
     numerics = ['int8', 'int16', 'int32', 'int64', 'float16', 'float32', 'float64']
@@ -277,10 +277,13 @@ def main(model_name="basic"):
     df_importance = pd.DataFrame()
 
     print("load train dataset")
-    df_train = pd.read_feather("../../data/989_merge/train_merge.feather").drop(remove_cols, axis=1, errors="ignore")
+    df_train = pd.read_feather("../../data/merge/train_merge.feather").drop(remove_cols, axis=1, errors="ignore")
     print("load test dataset")
-    df_test = pd.read_feather("../../data/989_merge/test_merge.feather").drop(remove_cols, axis=1, errors="ignore")
+    df_test = pd.read_feather("../../data/merge/test_merge.feather").drop(remove_cols, axis=1, errors="ignore")
 
+    cat_feats = _get_categorical_features(df_train)
+    df_train = df_train.drop(cat_feats, axis=1)
+    df_test = df_test.drop(cat_feats, axis=1)
     if select_cols is not None:
         df_train = df_train[[x for x in (list(select_cols) + [target_col] + [id_col]) if x in df_train.columns]]
         df_test = df_test[[x for x in (list(select_cols) + [id_col]) if x in df_test.columns]]

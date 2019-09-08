@@ -17,13 +17,12 @@ import time
 print("waiting..")
 # time.sleep(60*60*1)
 print("basic_feature")
-# f_001_basic_feature.main()
+f_001_basic_feature.main()
 
-# print("101_agg_id")
-# f_101_agg_id.main()
-# print("101_agg_id")
-# f_101_agg_id_2.main()
-"""
+print("101_agg_id")
+f_101_agg_id.main()
+print("101_agg_id")
+f_101_agg_id_2.main()
 print("101_agg_id")
 for i in range(10):
     print("\n\n\n\n\n *********** DIV = {} ************".format(i))
@@ -37,11 +36,10 @@ print("104_1_agg_id")
 f_104_1_agg_id.main()
 print("105_1_agg_id")
 f_105_pca.main()
-"""
 
 print("999_merge")
 f_999_merge.main(nrows=None)
 print("run!")
-# run.main()
+run.main()
 print("run!")
 run_timesplit.main()

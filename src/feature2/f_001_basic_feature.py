@@ -114,15 +114,26 @@ def identify_id(df):
         else:
             return x
 
+    def d1_zero_to_d10(x):
+        if x["D1"] == 0:
+            return x.fillna(0)["D10"]
+        else:
+            return x["D1"]
+
     print(sys._getframe().f_code.co_name)
+    df["TEMP__D1_zero_to_D10"] = df[["D1", "D10"]].apply(d1_zero_to_d10, axis=1)
+
     df["TEMP__uid"] = df['card1'].astype(str)+'_'+df['card2'].astype(str)
     df["TEMP__uid2"] = df["TEMP__uid"].astype(str)+"_"+df['card3'].astype(str)+'_'+df['card5'].astype(str)+"_"# +df["P_emaildomain"].astype(str)
-    df["TEMP__uid3"] = df["TEMP__uid2"].astype(str)+"_"+df['addr1'].astype(str)+'_'+df['addr2'].astype(str)
+    df["TEMP__uid3"] = df["TEMP__uid2"].astype(str) + "_" + df['addr1'].fillna("none").astype(str) + '_' + df['addr2'].fillna("none").astype(str)
     df["TEMP__uid4"] = (df["V160"] - df["V159"]).astype(str)
-    df["TEMP__uid2+DT"] = df["TEMP__uid2"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D1"]).astype(str)
-    df["TEMP__uid3+DT"] = df["TEMP__uid3"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D1"]).astype(str)
-    df["TEMP__uid2+DT2"] = df["TEMP__uid2+DT"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D10"]).astype(str)
-    df["TEMP__uid3+DT2"] = df["TEMP__uid3+DT"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D10"]).astype(str)
+    df["TEMP__uid2+DT"] = df["TEMP__uid2"].astype(str) + "_" + (df["TEMP__DT_D"] - df["D1"]).astype(str)
+    df["TEMP__uid3+DT"] = df["TEMP__uid3"].astype(str) + "_" + (df["TEMP__DT_D"] - df["D1"]).astype(str)
+    # df["TEMP__uid2+DT"] = df["TEMP__uid2"].astype(str) + "_" + (df["TEMP__DT_D"] - df["TEMP__D1_zero_to_D10"]).astype(str)
+    # df["TEMP__uid3+DT"] = df["TEMP__uid3"].astype(str) + "_" + (df["TEMP__DT_D"] - df["TEMP__D1_zero_to_D10"]).astype(str)
+
+    df["TEMP__uid2+DT2"] = df["TEMP__uid2+DT"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D10"]).fillna("none").astype(str)
+    df["TEMP__uid3+DT2"] = df["TEMP__uid3+DT"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D10"]).fillna("none").astype(str)
     df["TEMP__uid4+DT"] = df["TEMP__uid4"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D1"]).astype(str)
     df["TEMP__uid2+DT+D"] = df["TEMP__uid2"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D1"]).astype(str)+"_"+df["TEMP__DT_D"].astype(str)
     df["TEMP__uid2+DT+W"] = df["TEMP__uid2"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D1"]).astype(str)+"_"+df["TEMP__DT_W"].astype(str)
@@ -132,10 +143,11 @@ def identify_id(df):
     df["TEMP__uid3+DT+M4"] = df["TEMP__uid3+DT"].astype(str)+"_"+(df["M4"]).astype(str)
 
     for col in ["TEMP__uid", "TEMP__uid2", "TEMP__uid3", "TEMP__uid4",
-                "TEMP__uid2+DT", "TEMP__uid4+DT",
+                "TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid4+DT",
+                "TEMP__uid2+DT2", "TEMP__uid3+DT2",
                 "TEMP__uid2+DT+D", "TEMP__uid2+DT+W",
-                "TEMP__uid2+DT+M4"
-                ]:
+                "TEMP__uid3+DT+D", "TEMP__uid3+DT+W",
+                "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"]:
         df[col] = df[col].apply(fillna)
 
     # keyとして使う
@@ -161,7 +173,7 @@ def make_C_D_feature(df):
         for agg_col in agg_cols:
             df["div_{}_{}".format(agg_col, d_col)] = df[agg_col] / df[d_col]
 
-    for d_cols in combinations(["D1", "D2", "D3", "D4", "D5"]):
+    for d_cols in combinations(["D1", "D2", "D3", "D4", "D5"], r=2):
         df["div_{}_{}".format(d_cols[0], d_cols[1])] = df[d_cols[0]] / df[d_cols[1]].replace(0, np.nan)
         df["diff_{}_{}".format(d_cols[0], d_cols[1])] = df[d_cols[0]] - df[d_cols[1]]
 
