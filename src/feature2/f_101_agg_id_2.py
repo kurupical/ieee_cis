@@ -99,6 +99,7 @@ def main():
                                                 "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"],
                                       target_cols=["D{}".format(x) for x in range(1, 15+1)],
                                       agg_types=["mean", "std", "max"])
+    """
     df_train, df_test = id_aggregates(df_train, df_test,
                                       agg_cols=["TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid4+DT",
                                                 "TEMP__uid2+DT2", "TEMP__uid3+DT2",
@@ -107,6 +108,7 @@ def main():
                                       target_cols=["V246", "V258", "V201", "V149", "V190", "V200", "V317", "V45", "V189",
                                                    "V243", "V197", "V244", "V70", "V44"],
                                       agg_types=["mean", "std"])
+    """
     df_train, df_test = eplased_day(df_train, df_test,
                                     agg_cols=["TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid4+DT",
                                               "TEMP__uid2+DT2", "TEMP__uid3+DT2",

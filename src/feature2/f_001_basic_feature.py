@@ -4,6 +4,7 @@ import numpy as np
 import datetime
 import sys
 import os
+from itertools import combinations
 
 def make_nan_pattern(df):
     def join_string(x):
@@ -160,6 +161,10 @@ def make_C_D_feature(df):
         agg_cols.extend(["D5", "D11", "D13", "D14", "D15"])
         for agg_col in agg_cols:
             df["div_{}_{}".format(agg_col, d_col)] = df[agg_col] / df[d_col]
+
+    for d_cols in combinations(["D1", "D2", "D3", "D4", "D5"]):
+        df["div_{}_{}".format(d_cols[0], d_cols[1])] = df[d_cols[0]] / df[d_cols[1]].replace(0, np.nan)
+        df["diff_{}_{}".format(d_cols[0], d_cols[1])] = df[d_cols[0]] - df[d_cols[1]]
 
     return df
 
