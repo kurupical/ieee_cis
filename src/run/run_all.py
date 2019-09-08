@@ -40,7 +40,7 @@ f_105_pca.main()
 """
 
 print("999_merge")
-f_999_merge.main(nrows=80000)
+f_999_merge.main(nrows=None)
 print("run!")
 # run.main()
 print("run!")
