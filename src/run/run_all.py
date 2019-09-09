@@ -6,6 +6,7 @@ from src.feature2 import f_102_countencoding
 from src.feature2 import f_104_pattern
 from src.feature2 import f_104_1_agg_id
 from src.feature2 import f_105_pca
+from src.feature2 import f_106_shift
 # from src.feature2 import f_989_merge_nn
 from src.feature2 import f_999_merge
 from src.run import run
@@ -14,8 +15,8 @@ from src.run import run_timesplit
 
 import time
 
-# print("waiting..D1zerotoD10")
-# time.sleep(60*60*5)
+print("waiting..D")
+time.sleep(60*60*4)
 print("basic_feature")
 f_001_basic_feature.main()
 
@@ -36,8 +37,9 @@ print("104_1_agg_id")
 f_104_1_agg_id.main()
 print("105_1_agg_id")
 f_105_pca.main()
+f_106_shift.main()
 print("999_merge")
-f_999_merge.main(nrows=None)
+f_999_merge.main(nrows=70000)
 print("run!")
 run.main()
 print("run!")

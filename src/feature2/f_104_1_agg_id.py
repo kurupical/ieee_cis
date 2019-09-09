@@ -64,8 +64,7 @@ def main():
 
     agg_cols = ["TEMP__uid2+DT", "TEMP__uid3+DT",
                 "TEMP__uid4+DT",
-                "TEMP__uid2+DT2", "TEMP__uid3+DT2",
-                "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"]
+                "TEMP__uid2+DT2", "TEMP__uid3+DT2"]
     target_cols = [x for x in df_train.columns if "div" not in x and "std" in x]
     df_train, df_test = id_aggregates(df_train, df_test,
                                       agg_cols=agg_cols,
