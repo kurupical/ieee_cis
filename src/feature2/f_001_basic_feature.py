@@ -139,15 +139,21 @@ def identify_id(df):
     df["TEMP__uid2+DT+W"] = df["TEMP__uid2"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D1"]).astype(str)+"_"+df["TEMP__DT_W"].astype(str)
     df["TEMP__uid3+DT+D"] = df["TEMP__uid3"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D1"]).astype(str)+"_"+df["TEMP__DT_D"].astype(str)
     df["TEMP__uid3+DT+W"] = df["TEMP__uid3"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D1"]).astype(str)+"_"+df["TEMP__DT_W"].astype(str)
-    df["TEMP__uid2+DT+M4"] = df["TEMP__uid2+DT"].astype(str)+"_"+(df["M4"]).astype(str)
-    df["TEMP__uid3+DT+M4"] = df["TEMP__uid3+DT"].astype(str)+"_"+(df["M4"]).astype(str)
+    df["TEMP__uid2+DT2+D"] = df["TEMP__uid2"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D1"]).astype(str)+"_"+df["TEMP__DT_D"].astype(str)
+    df["TEMP__uid2+DT2+W"] = df["TEMP__uid2"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D1"]).astype(str)+"_"+df["TEMP__DT_W"].astype(str)
+    df["TEMP__uid3+DT2+D"] = df["TEMP__uid3"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D1"]).astype(str)+"_"+df["TEMP__DT_D"].astype(str)
+    df["TEMP__uid3+DT2+W"] = df["TEMP__uid3"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D1"]).astype(str)+"_"+df["TEMP__DT_W"].astype(str)
+    df["TEMP__uid2+DT2+M4"] = df["TEMP__uid2+DT"].astype(str)+"_"+(df["M4"]).astype(str)
+    df["TEMP__uid3+DT2+M4"] = df["TEMP__uid3+DT"].astype(str)+"_"+(df["M4"]).astype(str)
 
     for col in ["TEMP__uid", "TEMP__uid2", "TEMP__uid3", "TEMP__uid4",
                 "TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid4+DT",
                 "TEMP__uid2+DT2", "TEMP__uid3+DT2",
                 "TEMP__uid2+DT+D", "TEMP__uid2+DT+W",
                 "TEMP__uid3+DT+D", "TEMP__uid3+DT+W",
-                "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"]:
+                "TEMP__uid2+DT2+D", "TEMP__uid2+DT2+W",
+                "TEMP__uid3+DT2+D", "TEMP__uid3+DT2+W",
+                "TEMP__uid2+DT2+M4", "TEMP__uid3+DT2+M4"]:
         df[col] = df[col].apply(fillna)
 
     # keyとして使う

@@ -94,8 +94,8 @@ def main(target_cols, name):
     original_features = df_train.columns
 
     df_train, df_test = id_aggregates(df_train, df_test,
-                                      agg_cols=[# "TEMP__uid2+DT",
-                                                "TEMP__uid3+DT"
+                                      agg_cols=["TEMP__uid2+DT2",
+                                                # "TEMP__uid3+DT"
                                                 # "TEMP__uid4+DT",
                                                 # "TEMP__uid2+DT2", "TEMP__uid3+DT2",
                                                 # "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"

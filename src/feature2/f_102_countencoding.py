@@ -55,9 +55,9 @@ def main():
                    "id_32", 'id_33', "id_34", "id_35", "id_36", "id_37",
                    'id_30','id_30_device','id_30_version',
                    'id_31_device',
-                   'TEMP__uid','TEMP__uid2','TEMP__uid3', "TEMP__uid2+DT", "TEMP__uid3+DT",
+                   'TEMP__uid','TEMP__uid2','TEMP__uid3', "TEMP__uid2+DT2", "TEMP__uid3+DT2",
                    "TEMP__uid4", "TEMP__uid4+DT",
-                   "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"
+                   "TEMP__uid2+DT2+M4", "TEMP__uid3+DT2+M4"
                   ]
     df_train, df_test = countencoding(df_train, df_test,
                                       target_cols=target_cols)
@@ -76,9 +76,9 @@ def main():
                    ]
     df_train, df_test = countencoding_agg(df_train, df_test,
                                       target_cols=target_cols,
-                                      agg_cols=['TEMP__uid','TEMP__uid2','TEMP__uid3', "TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid4",
+                                      agg_cols=['TEMP__uid', "TEMP__uid2+DT2", "TEMP__uid3+DT2", "TEMP__uid4",
                                                 "TEMP__uid4+DT",
-                                                "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"
+                                                "TEMP__uid2+DT2+M4", "TEMP__uid3+DT2+M4"
                                                ])
 
     df_train = df_train[[x for x in df_train.columns if x not in original_features]]
