@@ -14,8 +14,8 @@ from src.run import run_timesplit
 
 import time
 
-print("waiting..D1zerotoD10")
-time.sleep(60*60*5)
+# print("waiting..D1zerotoD10")
+# time.sleep(60*60*5)
 print("basic_feature")
 f_001_basic_feature.main()
 
