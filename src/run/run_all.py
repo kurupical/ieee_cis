@@ -14,12 +14,11 @@ from src.run import run_timesplit
 # from src.run import run_nn
 
 import time
+# print("waiting..D")
+# time.sleep(60*60*4)
 
-print("waiting..D")
-time.sleep(60*60*4)
 print("basic_feature")
 f_001_basic_feature.main()
-
 print("101_agg_id")
 f_101_agg_id.main()
 print("101_agg_id")
@@ -39,8 +38,8 @@ print("105_1_agg_id")
 f_105_pca.main()
 f_106_shift.main()
 print("999_merge")
-f_999_merge.main(nrows=70000)
-print("run!")
-run.main()
+f_999_merge.main(nrows=80000)
+# print("run!")
+# run.main()
 print("run!")
 run_timesplit.main()

@@ -63,7 +63,7 @@ def main():
                                       target_cols=target_cols)
     df_train, df_test = countencoding_agg(df_train, df_test,
                                       target_cols=target_cols,
-                                      agg_cols=["TEMP__DT_M", "TEMP__DT_W", "TEMP__DT_D"])
+                                      agg_cols=["TEMP__DT_M", "TEMP__DT_W", "TEMP__DT_D", "TEMP__DT_H"])
     target_cols = ['addr1','addr2',
                    'dist1','dist2',
                    'P_emaildomain', 'R_emaildomain',

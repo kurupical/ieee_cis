@@ -28,6 +28,7 @@ def datefeature(df):
     df['TEMP__DT_M'] = (df['TEMP__DT'].dt.year - 2017) * 12 + df['TEMP__DT'].dt.month
     df['TEMP__DT_W'] = (df['TEMP__DT'].dt.year - 2017) * 52 + df['TEMP__DT'].dt.weekofyear
     df['TEMP__DT_D'] = (df['TEMP__DT'].dt.year - 2017) * 365 + df['TEMP__DT'].dt.dayofyear
+    df['TEMP__DT_H'] = (df['TEMP__DT'].dt.year - 2017) * 365 + df['TEMP__DT'].dt.dayofyear * 24 + df["TEMP__DT"].dt.hour
 
     df["DT_year-half"] = (df["TEMP__DT"].dt.month % 6).astype(str) # original
     df["DT_year-quarter"] = (df["TEMP__DT"].dt.month % 3).astype(str) # original
@@ -137,16 +138,18 @@ def identify_id(df):
     df["TEMP__uid4+DT"] = df["TEMP__uid4"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D1"]).astype(str)
     df["TEMP__uid2+DT+D"] = df["TEMP__uid2"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D1"]).astype(str)+"_"+df["TEMP__DT_D"].astype(str)
     df["TEMP__uid2+DT+W"] = df["TEMP__uid2"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D1"]).astype(str)+"_"+df["TEMP__DT_W"].astype(str)
+    df["TEMP__uid2+DT+H"] = df["TEMP__uid2"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D1"]).astype(str)+"_"+df["TEMP__DT_H"].astype(str)
     df["TEMP__uid3+DT+D"] = df["TEMP__uid3"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D1"]).astype(str)+"_"+df["TEMP__DT_D"].astype(str)
     df["TEMP__uid3+DT+W"] = df["TEMP__uid3"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D1"]).astype(str)+"_"+df["TEMP__DT_W"].astype(str)
+    df["TEMP__uid3+DT+H"] = df["TEMP__uid3"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D1"]).astype(str)+"_"+df["TEMP__DT_H"].astype(str)
     df["TEMP__uid2+DT+M4"] = df["TEMP__uid2+DT"].astype(str)+"_"+(df["M4"]).astype(str)
     df["TEMP__uid3+DT+M4"] = df["TEMP__uid3+DT"].astype(str)+"_"+(df["M4"]).astype(str)
 
     for col in ["TEMP__uid", "TEMP__uid2", "TEMP__uid3", "TEMP__uid4",
                 "TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid4+DT",
                 "TEMP__uid2+DT2", "TEMP__uid3+DT2",
-                "TEMP__uid2+DT+D", "TEMP__uid2+DT+W",
-                "TEMP__uid3+DT+D", "TEMP__uid3+DT+W",
+                "TEMP__uid2+DT+D", "TEMP__uid2+DT+W", "TEMP__uid2+DT+H",
+                "TEMP__uid3+DT+D", "TEMP__uid3+DT+W", "TEMP__uid3+DT+H",
                 "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"]:
         df[col] = df[col].apply(fillna)
 
