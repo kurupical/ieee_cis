@@ -95,6 +95,9 @@ def make_similarV_feature2(df):
     groups.append(["V102", "V178", "V294"])
     groups.append(["V96", "V323"])
     groups.append(["V97", "V103", "V280", "V295", "V324"])
+    groups.append(["V{}".format(x) for x in range(167, 201+1)])
+    groups.append(["id_01", "id_06", "id_08", "id_10"])
+    groups.append(["id_03", "id_05", "id_07", "id_09"])
 
     for group in groups:
         df = meanstd_diffdiv(group)
