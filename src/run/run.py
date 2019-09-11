@@ -25,7 +25,7 @@ remove_cols = ["TransactionDT",
                ]
 remove_cols.extend(pd.read_csv("cols.csv")["column"].values)
 
-is_reduce_memory = False
+is_reduce_memory = True
 select_cols = None # 全てのcolumnを選ぶ
 # select_cols = pd.read_csv("cols.csv")["column"].values
 
@@ -39,9 +39,9 @@ params = {'num_leaves': 256,
           "bagging_seed": 11,
           "metric": 'auc',
           "verbosity": -1,
-          'reg_alpha': 0.1,
-          'reg_lambda': 0.1,
-          'colsample_bytree': 0.05,
+          'reg_alpha': 1,
+          'reg_lambda': 1,
+          'colsample_bytree': 0.025,
           'early_stopping_rounds': 200,
           'n_estimators': 20000,
           }
