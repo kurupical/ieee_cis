@@ -96,6 +96,7 @@ def main():
     agg_cols = ["card1", "card2", "card3", "card5",
                 "TEMP__uid", "TEMP__uid2", "TEMP__uid3", "TEMP__uid4",
                 "TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid4+DT",
+                "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4",
                 "TEMP__uid2+DT2", "TEMP__uid3+DT2"]
     df_train, df_test = id_aggregates(df_train, df_test,
                                       agg_cols=agg_cols,
@@ -106,8 +107,8 @@ def main():
                                       target_cols=["TransactionAmt"],
                                       agg_types=["mean", "std", "cumsum"])
     df_train, df_test = id_aggregates(df_train, df_test,
-                                      agg_cols=["TEMP__uid2+DT+D", "TEMP__uid2+DT+W",
-                                                "TEMP__uid3+DT+D", "TEMP__uid3+DT+W"
+                                      agg_cols=["TEMP__uid2+DT+D", "TEMP__uid2+DT+W", "TEMP__uid2+DT+H",
+                                                "TEMP__uid3+DT+D", "TEMP__uid3+DT+W", "TEMP__uid3+DT+H"
                                                 ],
                                       target_cols=["TransactionAmt"],
                                       agg_types=["count", "sum"])
@@ -118,11 +119,13 @@ def main():
                                       target_cols=["D10", "D11"],
                                       agg_types=["std"])
     df_train, df_test = id_aggregates(df_train, df_test,
-                                      agg_cols=["DT_isDecember", "TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid4+DT"],
+                                      agg_cols=["DT_isDecember", "TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid4+DT",
+                                                "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"],
                                       target_cols=["id_{0:02d}".format(x) for x in range(1, 11+1)],
                                       agg_types=["mean", "std"])
     df_train, df_test = id_aggregates(df_train, df_test,
-                                      agg_cols=["TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid4+DT"],
+                                      agg_cols=["TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid4+DT",
+                                                "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4",],
                                       target_cols=["C{}".format(x) for x in range(1, 14+1)],
                                       agg_types=["mean", "std"])
     df_train = make_feature(df_train)

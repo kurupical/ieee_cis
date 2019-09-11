@@ -95,7 +95,8 @@ def main():
 
     df_train, df_test = id_aggregates(df_train, df_test,
                                       agg_cols=["TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid4+DT",
-                                                "TEMP__uid2+DT2", "TEMP__uid3+DT2"],
+                                                "TEMP__uid2+DT2", "TEMP__uid3+DT2",
+                                                "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"],
                                       target_cols=["D{}".format(x) for x in range(1, 15+1)],
                                       agg_types=["mean", "std", "max"])
     """
@@ -110,7 +111,8 @@ def main():
     """
     df_train, df_test = eplased_day(df_train, df_test,
                                     agg_cols=["TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid4+DT",
-                                              "TEMP__uid2+DT2", "TEMP__uid3+DT2"],
+                                              "TEMP__uid2+DT2", "TEMP__uid3+DT2",
+                                              "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"],
                                     target_cols=["D1", "D2", "D3", "D4", "D5", "D10", "D11", "D12", "D15"])
 
     df_train = df_train[[x for x in df_train.columns if x not in original_features]]
