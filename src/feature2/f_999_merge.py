@@ -55,6 +55,7 @@ def main(merge_features=None, nrows=None):
 
     del dfs
     gc.collect()
+    df_train = df_train.drop(drop_cols, axis=1, errors="ignore") #なぜか入れないとちゃんと削除されない。。
     drop_cols_2 = [x for x in df_train.columns if x[:6] in ["TEMP__"]]
     drop_cols_2.extend(["TransactionDT", "id_30", "id_31", "id_33"])
     print(df_train.shape)
@@ -77,6 +78,7 @@ def main(merge_features=None, nrows=None):
     del dfs
     gc.collect()
     df_test = postprocess(df_test)
+    df_test = df_test.drop(drop_cols, axis=1, errors="ignore") #なぜか入れないとちゃんと削除されない。。
     df_test = df_test.drop(drop_cols_2, axis=1, errors="ignore")
 
     print(df_test.shape)
