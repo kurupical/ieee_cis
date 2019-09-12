@@ -1,5 +1,5 @@
 import pandas as pd
-import lightgbm as lgb
+from catboost import CatBoostClassifier, Pool, cv
 import os
 import numpy as np
 from datetime import datetime as dt
@@ -25,26 +25,22 @@ remove_cols = ["TransactionDT",
                ]
 remove_cols.extend(pd.read_csv("cols.csv")["column"].values)
 
-is_reduce_memory = True
+is_reduce_memory = False
 select_cols = None # 全てのcolumnを選ぶ
 # select_cols = pd.read_csv("cols.csv")["column"].values
 
-params = {'num_leaves': 256,
-          'min_child_samples': 200,
-          'objective': 'binary',
-          'max_depth': -1,
-          'learning_rate': 0.01,
-          "boosting_type": "dart",
-          "subsample": 0.7,
-          "bagging_seed": 11,
-          "metric": 'auc',
-          "verbosity": -1,
-          'reg_alpha': 0.1,
-          'reg_lambda': 0.1,
-          'colsample_bytree': 0.05,
-          'early_stopping_rounds': 200,
-          'n_estimators': 20000,
-          }
+params = {
+            'n_estimators': 8000,
+            'learning_rate': 0.01,
+            'eval_metric': 'AUC',
+            'loss_function': 'Logloss',
+            'random_seed': random_state,
+            'metric_period': 100,
+            'od_wait': 200,
+            'task_type': 'GPU',
+            'max_depth': 10,
+            "verbose": 100
+        }
 
 def _get_categorical_features(df):
     numerics = ['int8', 'int16', 'int32', 'int64', 'float16', 'float32', 'float64']
@@ -69,11 +65,8 @@ def learning(df_train, df_test):
 
     for f in cat_feats:
         # print(f)
-        df_train[f] = df_train[f].fillna("nan").astype(str)
-        df_test[f] = df_test[f].fillna("nan").astype(str)
-        le = LabelEncoder().fit(df_train[f].append(df_test[f]))
-        df_train[f] = le.transform(df_train[f])
-        df_test[f] = le.transform(df_test[f])
+        df_train[f] = df_train[f].astype(str)
+        df_test[f] = df_test[f].astype(str)
 
     i = 0
     folds = KFold(n_splits=n_folds)
@@ -100,14 +93,12 @@ def learning(df_train, df_test):
         # if n_fold == 2: continue
         # if n_fold == 4: continue
 
-        lgb_train = lgb.Dataset(data=df_train.drop([id_col, target_col], axis=1).iloc[train_idx], label=df_train[target_col].iloc[train_idx])
-        lgb_val = lgb.Dataset(data=df_train.drop([id_col, target_col], axis=1).iloc[val_idx], label=df_train[target_col].iloc[val_idx])
+        model = CatBoostClassifier(**params)
 
-        model = lgb.train(copy.copy(params),
-                          lgb_train,
-                          categorical_feature=cat_feats,
-                          valid_sets=[lgb_train, lgb_val],
-                          verbose_eval=100)
+        model.fit(df_train.drop([id_col, target_col], axis=1).iloc[train_idx],
+                  df_train[target_col].iloc[train_idx],
+                  cat_features=cat_feats,
+                  eval_set=(df_train.drop([id_col, target_col], axis=1).iloc[val_idx], df_train[target_col].iloc[val_idx]))
 
         w_pred_train = model.predict(df_train.drop([id_col, target_col], axis=1).iloc[val_idx])
         df_pred_train = df_pred_train.append(pd.DataFrame(
@@ -118,10 +109,12 @@ def learning(df_train, df_test):
         w_pred_test = model.predict(df_test.drop([id_col], axis=1))
         print(w_pred_test.mean())
         df_pred_test["pred_fold{}_{}".format(i, n_fold)] = w_pred_test
+        """
         df_importance["fold{}_{}_gain".format(i, n_fold)] = \
             model.feature_importance(importance_type="gain") / model.feature_importance(importance_type="gain").sum()
         df_importance["fold{}_{}_split".format(i, n_fold)] = \
             model.feature_importance(importance_type="split") / model.feature_importance(importance_type="split").sum()
+        """
         df_result = df_result.append(
             pd.DataFrame(
                 {"fold": [n_fold],
@@ -131,7 +124,7 @@ def learning(df_train, df_test):
             ),
             ignore_index=True
         )
-        del w_pred_train, w_pred_test, lgb_train, lgb_val, model
+        del w_pred_train, w_pred_test, model
         gc.collect()
 
     df_submit = pd.DataFrame()

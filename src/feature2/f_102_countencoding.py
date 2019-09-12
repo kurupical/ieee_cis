@@ -55,6 +55,7 @@ def main():
                    "id_32", 'id_33', "id_34", "id_35", "id_36", "id_37",
                    'id_30','id_30_device','id_30_version',
                    'id_31_device',
+                   "AMT_Decimal", "AMT_Decimal_keta",
                    'TEMP__uid','TEMP__uid2','TEMP__uid3', "TEMP__uid2+DT", "TEMP__uid3+DT",
                    "TEMP__uid4", "TEMP__uid4+DT",
                    "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"

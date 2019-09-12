@@ -193,9 +193,19 @@ def fix_data_existing_only_test(df):
 
     return df
 
+def get_decimal(df):
+    print(sys._getframe().f_code.co_name)
+    df["AMT_Decimal"] = (df["TransactionAmt"] - df["TransactionAmt"].astype(int)).astype(str)
+    df["AMT_Decimal_keta"] = [str(len(x)-2) for x in df["AMT_Decimal"].values]
+    return df
+
 def main():
     df_train = pd.read_feather("../../data/original/train_all.feather")
     df_test = pd.read_feather("../../data/original/test_all.feather")
+
+    df_train = get_decimal(df_train)
+    df_test = get_decimal(df_test)
+
 
     df_train = make_nan_pattern(df_train)
     df_test = make_nan_pattern(df_test)
