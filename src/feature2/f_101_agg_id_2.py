@@ -45,11 +45,39 @@ def _agg(df_train, df_test, agg_col, target_col, agg_type):
 
     return df_train, df_test
 
+
+def _maxmin(df_train, df_test, agg_col, target_col, agg_type):
+
+    """
+
+    :param df_train:
+    :param df_test:
+    :param agg_col: groupbyする項目
+    :param target_col: 集計される項目
+    :param agg_type: 集計方法:mean, sum, cumsum, など
+    :return:
+    """
+    print("agg: {}, target: {}, agg_type: {}".format(agg_col, target_col, agg_type))
+    new_col_name = "{}_groupby{}_{}".format(target_col, agg_col, agg_type)
+
+    w_df = pd.concat([df_train[[agg_col, target_col]], df_test[[agg_col, target_col]]])
+    w_df_min = w_df.groupby([agg_col])[target_col].transform("min")
+    w_df_max = w_df.groupby([agg_col])[target_col].transform("max")
+
+    w_df_maxmin = w_df_max - w_df_min
+    df_train[new_col_name] = w_df_maxmin.head(len(df_train)).reset_index(drop=True)
+    df_test[new_col_name] = w_df_maxmin.tail(len(df_test)).reset_index(drop=True)
+
+    return df_train, df_test
+
 def id_aggregates(df_train, df_test, agg_cols, target_cols, agg_types):
     for agg_col in tqdm.tqdm(agg_cols):
         for target_col in target_cols:
             for agg_type in agg_types:
-                df_train, df_test = _agg(df_train, df_test, agg_col, target_col, agg_type)
+                if agg_type == "maxmin":
+                    df_train, df_test = _maxmin(df_train, df_test, agg_col, target_col, agg_type)
+                else:
+                    df_train, df_test = _agg(df_train, df_test, agg_col, target_col, agg_type)
     return df_train, df_test
 
 def make_feature(df):
@@ -82,8 +110,15 @@ def eplased_day(df_train, df_test, agg_cols, target_cols):
     for agg_col in agg_cols:
         for target_col in target_cols:
             w_df = pd.concat([df_train[[agg_col, target_col]], df_test[[agg_col, target_col]]]).reset_index(drop=True)
+            # min
             col_name = "diff_{}_{}min_groupby{}".format(target_col, target_col, agg_col)
             w_df[col_name] = w_df[target_col].values - w_df[[agg_col, target_col]].groupby(agg_col).transform("min").values.reshape(-1)
+            df_train[col_name] = w_df[col_name].head(len(df_train))
+            df_test[col_name] = w_df[col_name].tail(len(df_test))
+
+            # max
+            col_name = "diff_{}_{}max_groupby{}".format(target_col, target_col, agg_col)
+            w_df[col_name] = w_df[target_col].values - w_df[[agg_col, target_col]].groupby(agg_col).transform("max").values.reshape(-1)
             df_train[col_name] = w_df[col_name].head(len(df_train))
             df_test[col_name] = w_df[col_name].tail(len(df_test))
     return df_train, df_test
@@ -98,7 +133,7 @@ def main():
                                                 "TEMP__uid2+DT2", "TEMP__uid3+DT2",
                                                 "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"],
                                       target_cols=["D{}".format(x) for x in range(1, 15+1)],
-                                      agg_types=["mean", "std", "max"])
+                                      agg_types=["maxmin", "mean", "std", "max"])
     """
     df_train, df_test = id_aggregates(df_train, df_test,
                                       agg_cols=["TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid4+DT",
