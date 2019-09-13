@@ -30,15 +30,15 @@ select_cols = None # 全てのcolumnを選ぶ
 # select_cols = pd.read_csv("cols.csv")["column"].values
 
 params = {
-            'n_estimators': 8000,
-            'learning_rate': 0.01,
+            'n_estimators': 12000,
+            'learning_rate': 0.03,
             'eval_metric': 'AUC',
             'loss_function': 'Logloss',
             'random_seed': random_state,
             'metric_period': 100,
             'od_wait': 200,
             'task_type': 'GPU',
-            'max_depth': 10,
+            'max_depth': 8,
             "verbose": 100
         }
 
@@ -100,13 +100,13 @@ def learning(df_train, df_test):
                   cat_features=cat_feats,
                   eval_set=(df_train.drop([id_col, target_col], axis=1).iloc[val_idx], df_train[target_col].iloc[val_idx]))
 
-        w_pred_train = model.predict(df_train.drop([id_col, target_col], axis=1).iloc[val_idx])
+        w_pred_train = model.predict_proba(df_train.drop([id_col, target_col], axis=1).iloc[val_idx])[:, 1]
         df_pred_train = df_pred_train.append(pd.DataFrame(
             {id_col: df_train[id_col].iloc[val_idx],
              "pred": w_pred_train,
              "y": df_train[target_col].iloc[val_idx]}
         ), ignore_index=True)
-        w_pred_test = model.predict(df_test.drop([id_col], axis=1))
+        w_pred_test = model.predict_proba(df_test.drop([id_col], axis=1))[:, 1]
         print(w_pred_test.mean())
         df_pred_test["pred_fold{}_{}".format(i, n_fold)] = w_pred_test
         """
@@ -119,7 +119,7 @@ def learning(df_train, df_test):
             pd.DataFrame(
                 {"fold": [n_fold],
                  "random_state": [random_state],
-                 "auc_train": [roc_auc_score(df_train[target_col].iloc[train_idx], model.predict(df_train.drop([id_col, target_col], axis=1).iloc[train_idx]))],
+                 "auc_train": [roc_auc_score(df_train[target_col].iloc[train_idx], model.predict_proba(df_train.drop([id_col, target_col], axis=1).iloc[train_idx])[:, 1])],
                  "auc_test": [roc_auc_score(df_train[target_col].iloc[val_idx], w_pred_train)]}
             ),
             ignore_index=True

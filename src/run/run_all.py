@@ -17,8 +17,6 @@ from src.run import run_catboost
 import time
 # print("waiting..D..alpha/lambda==1, colsample=0.025")
 # time.sleep(60*60*0.3)
-run_catboost.main()
-
 
 print("basic_feature")
 f_001_basic_feature.main()
@@ -41,11 +39,12 @@ print("105_1_agg_id")
 f_105_pca.main()
 print("106_shift")
 f_106_shift.main()
+
 print("999_merge")
 f_999_merge.main(nrows=None)
 print("run!")
 run.main()
 print("run!")
 run_catboost.main()
-print("run!")
-run_timesplit.main()
+# print("run!")
+# run_timesplit.main()

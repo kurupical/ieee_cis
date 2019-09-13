@@ -4,6 +4,7 @@ import gc
 import glob
 from tqdm import tqdm
 import time
+from src.feature.common import reduce_mem_usage
 
 np.random.seed(0)
 
@@ -42,11 +43,13 @@ def main(merge_features=None, nrows=None):
 
     train_idx = np.arange(590540)
     test_idx = np.arange(506691)
+    df_train = pd.read_feather("../../data/baseline/train/baseline.feather")
     if nrows is not None:
-        train_idx = np.sort(np.random.choice(train_idx, nrows, replace=False))
+        train_idx = np.sort(np.concatenate([df_train[df_train["isFraud"]==1].index.to_list(),
+                                            np.random.choice(train_idx, nrows, replace=False)]))
         test_idx = np.sort(np.random.choice(test_idx, nrows, replace=False))
-    df_train = pd.read_feather("../../data/baseline/train/baseline.feather").iloc[train_idx]
     # print(f)
+    df_train = df_train.iloc[train_idx]
     dfs = [df_train]
     drop_cols = pd.read_csv("../feature2/cols.csv")["column"].values
     dfs.extend([pd.read_feather(x.format("train")).iloc[train_idx].drop(drop_cols, axis=1, errors="ignore") for x in merge_features])

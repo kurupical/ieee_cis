@@ -5,3 +5,5 @@
 *.pyc
 
 script/split_dt_visualize/
+
+src/run/catboost_info/
