@@ -44,12 +44,80 @@ f_106_shift.main()
 print("107_rolling")
 f_107_rolling.main()
 """
-
 print("999_merge")
-f_999_merge.main(nrows=80000)
+f_999_merge.main(nrows=None)
 print("run!")
 run.main()
 print("run!")
-run_catboost.main()
+run.main(is_only_W=True)
+print("run!")
+# catboostいろいろ
+# Baseline
+params = {
+    'n_estimators': 12000,
+    'learning_rate': 0.1,
+    'eval_metric': 'AUC',
+    'loss_function': 'Logloss',
+    'random_seed': 0,
+    'metric_period': 100,
+    'od_wait': 200,
+    'task_type': 'GPU',
+    'max_depth': 8,
+    "verbose": 100,
+    "max_bin": 64
+}
+run_catboost.main(params)
+
+# max_bin=64
+params = {
+    'n_estimators': 12000,
+    'learning_rate': 0.1,
+    'eval_metric': 'AUC',
+    'loss_function': 'Logloss',
+    'random_seed': 0,
+    'metric_period': 100,
+    'od_wait': 200,
+    'task_type': 'GPU',
+    'max_depth': 8,
+    "verbose": 100,
+    "max_bin": 64
+}
+run_catboost.main(params)
+
+# has_time
+params = {
+    'n_estimators': 12000,
+    'learning_rate': 0.1,
+    'eval_metric': 'AUC',
+    'loss_function': 'Logloss',
+    'random_seed': 0,
+    'metric_period': 100,
+    'od_wait': 200,
+    'task_type': 'GPU',
+    'max_depth': 8,
+    "verbose": 100,
+    "has_time": True
+}
+run_catboost.main(params)
+
+
+# max_depth=9
+params = {
+    'n_estimators': 12000,
+    'learning_rate': 0.1,
+    'eval_metric': 'AUC',
+    'loss_function': 'Logloss',
+    'random_seed': 0,
+    'metric_period': 100,
+    'od_wait': 200,
+    'task_type': 'GPU',
+    'max_depth': 9,
+    "verbose": 100,
+    "has_time": True
+}
+run_catboost.main(params)
+
+
+#
 # print("run!")
 # run_timesplit.main()

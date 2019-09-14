@@ -29,18 +29,6 @@ is_reduce_memory = False
 select_cols = None # 全てのcolumnを選ぶ
 # select_cols = pd.read_csv("cols.csv")["column"].values
 
-params = {
-            'n_estimators': 12000,
-            'learning_rate': 0.03,
-            'eval_metric': 'AUC',
-            'loss_function': 'Logloss',
-            'random_seed': random_state,
-            'metric_period': 100,
-            'od_wait': 200,
-            'task_type': 'GPU',
-            'max_depth': 8,
-            "verbose": 100
-        }
 
 def _get_categorical_features(df):
     numerics = ['int8', 'int16', 'int32', 'int64', 'float16', 'float32', 'float64']
@@ -59,8 +47,20 @@ def _get_categorical_features(df):
     feats.extend([x for x in cat_cols if x not in feats])
     return feats
 
-def learning(df_train, df_test):
-
+def learning(df_train, df_test, params):
+    if params is None:
+        params = {
+            'n_estimators': 12000,
+            'learning_rate': 0.03,
+            'eval_metric': 'AUC',
+            'loss_function': 'Logloss',
+            'random_seed': random_state,
+            'metric_period': 100,
+            'od_wait': 200,
+            'task_type': 'GPU',
+            'max_depth': 8,
+            "verbose": 100
+        }
     cat_feats = _get_categorical_features(df_test)
 
     for f in cat_feats:
@@ -132,7 +132,7 @@ def learning(df_train, df_test):
     df_submit[target_col] = df_pred_test.drop(id_col, axis=1).mean(axis=1)
     return df_submit, df_pred_train, df_pred_test, df_importance, df_result
 
-def main():
+def main(params=None):
     # print("waiting...")
     # time.sleep(60*60*0.5)
     output_dir = "../../output/{}".format(dt.now().strftime("%Y%m%d%H%M%S"))
@@ -157,7 +157,8 @@ def main():
         df_test = reduce_mem_usage(df_test)
 
     sub, pred_train, pred_test, imp, result= learning(df_train=df_train,
-                                                      df_test=df_test)
+                                                      df_test=df_test,
+                                                      params=params)
 
     df_submit = df_submit.append(sub, ignore_index=True)
     df_pred_train = df_pred_train.append(pred_train, ignore_index=True)

@@ -139,7 +139,7 @@ def learning(df_train, df_test):
     df_submit[target_col] = df_pred_test.drop(id_col, axis=1).mean(axis=1)
     return df_submit, df_pred_train, df_pred_test, df_importance, df_result
 
-def main():
+def main(is_only_W=False):
     # print("waiting...")
     # time.sleep(60*60*0.5)
     output_dir = "../../output/{}".format(dt.now().strftime("%Y%m%d%H%M%S"))
@@ -158,6 +158,10 @@ def main():
     if select_cols is not None:
         df_train = df_train[list(select_cols) + [target_col] + [id_col]]
         df_test = df_test[list(select_cols) + [id_col]]
+
+    if is_only_W:
+        df_train = df_train.query("ProductCD == 'W'").reset_index(drop=True)
+        df_test = df_test.query("ProductCD == 'W'").reset_index(drop=True)
 
     if is_reduce_memory:
         df_train = reduce_mem_usage(df_train)
