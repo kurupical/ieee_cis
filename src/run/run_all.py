@@ -7,6 +7,7 @@ from src.feature2 import f_104_pattern
 from src.feature2 import f_104_1_agg_id
 from src.feature2 import f_105_pca
 from src.feature2 import f_106_shift
+from src.feature2 import f_107_rolling
 # from src.feature2 import f_989_merge_nn
 from src.feature2 import f_999_merge
 from src.run import run
@@ -18,6 +19,7 @@ import time
 # print("waiting..D..alpha/lambda==1, colsample=0.025")
 # time.sleep(60*60*0.3)
 
+"""
 print("basic_feature")
 f_001_basic_feature.main()
 print("101_agg_id")
@@ -39,9 +41,12 @@ print("105_1_agg_id")
 f_105_pca.main()
 print("106_shift")
 f_106_shift.main()
+print("107_rolling")
+f_107_rolling.main()
+"""
 
 print("999_merge")
-f_999_merge.main(nrows=None)
+f_999_merge.main(nrows=80000)
 print("run!")
 run.main()
 print("run!")
