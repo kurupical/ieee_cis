@@ -52,8 +52,8 @@ def remove_minor_cat(df_train, df_test, target_cols):
         valid_card = valid_card[valid_card > 2]
         valid_card = list(valid_card.index)
 
-        # df_train[col] = np.where(df_train[col].isin(df_test[col]), df_train[col], np.nan)
-        # df_test[col] = np.where(df_test[col].isin(df_train[col]), df_test[col], np.nan)
+        df_train[col] = np.where(df_train[col].isin(df_test[col]), df_train[col], np.nan)
+        df_test[col] = np.where(df_test[col].isin(df_train[col]), df_test[col], np.nan)
 
         df_train[col] = np.where(df_train[col].isin(valid_card), df_train[col], np.nan)
         df_test[col] = np.where(df_test[col].isin(valid_card), df_test[col], np.nan)
@@ -147,6 +147,7 @@ def identify_id(df):
     df["TEMP__uid2+DT+M4"] = df["TEMP__uid2+DT"].astype(str)+"_"+(df["M4"]).astype(str)
     df["TEMP__uid3+DT+M4"] = df["TEMP__uid3+DT"].astype(str)+"_"+(df["M4"]).astype(str)
 
+    """
     for col in ["TEMP__uid", "TEMP__uid2", "TEMP__uid3", "TEMP__uid4", "TEMP__uid5",
                 "TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid4+DT", "TEMP__uid5+DT",
                 "TEMP__uid2+DT2", "TEMP__uid3+DT2",
@@ -154,6 +155,7 @@ def identify_id(df):
                 "TEMP__uid3+DT+D", "TEMP__uid3+DT+W", "TEMP__uid3+DT+H",
                 "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"]:
         df[col] = df[col].apply(fillna)
+    """
 
     # keyとして使う
     """
