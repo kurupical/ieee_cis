@@ -147,7 +147,6 @@ def identify_id(df):
     df["TEMP__uid2+DT+M4"] = df["TEMP__uid2+DT"].astype(str)+"_"+(df["M4"]).astype(str)
     df["TEMP__uid3+DT+M4"] = df["TEMP__uid3+DT"].astype(str)+"_"+(df["M4"]).astype(str)
 
-    """
     for col in ["TEMP__uid", "TEMP__uid2", "TEMP__uid3", "TEMP__uid4", "TEMP__uid5",
                 "TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid4+DT", "TEMP__uid5+DT",
                 "TEMP__uid2+DT2", "TEMP__uid3+DT2",
@@ -155,7 +154,6 @@ def identify_id(df):
                 "TEMP__uid3+DT+D", "TEMP__uid3+DT+W", "TEMP__uid3+DT+H",
                 "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"]:
         df[col] = df[col].apply(fillna)
-    """
 
     # keyとして使う
     """
