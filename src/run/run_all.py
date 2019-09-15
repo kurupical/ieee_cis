@@ -17,7 +17,7 @@ from src.run import run_catboost
 
 import time
 # print("waiting..D..alpha/lambda==1, colsample=0.025")
-# time.sleep(60*60*0.3)
+# time.sleep(60*60*1.5)
 
 """
 print("basic_feature")
@@ -45,11 +45,9 @@ print("107_rolling")
 f_107_rolling.main()
 """
 print("999_merge")
-f_999_merge.main(nrows=None)
+f_999_merge.main(nrows=80000)
 print("run!")
-run.main()
-print("run!")
-run.main(is_only_W=True)
+run.main(query="ProductCD =='C'")
 print("run!")
 # catboostいろいろ
 # Baseline
@@ -62,62 +60,36 @@ params = {
     'metric_period': 100,
     'od_wait': 200,
     'task_type': 'GPU',
-    'max_depth': 8,
-    "verbose": 100,
-    "max_bin": 64
-}
-run_catboost.main(params)
-
-# max_bin=64
-params = {
-    'n_estimators': 12000,
-    'learning_rate': 0.1,
-    'eval_metric': 'AUC',
-    'loss_function': 'Logloss',
-    'random_seed': 0,
-    'metric_period': 100,
-    'od_wait': 200,
-    'task_type': 'GPU',
-    'max_depth': 8,
-    "verbose": 100,
-    "max_bin": 64
-}
-run_catboost.main(params)
-
-# has_time
-params = {
-    'n_estimators': 12000,
-    'learning_rate': 0.1,
-    'eval_metric': 'AUC',
-    'loss_function': 'Logloss',
-    'random_seed': 0,
-    'metric_period': 100,
-    'od_wait': 200,
-    'task_type': 'GPU',
-    'max_depth': 8,
-    "verbose": 100,
-    "has_time": True
-}
-run_catboost.main(params)
-
-
-# max_depth=9
-params = {
-    'n_estimators': 12000,
-    'learning_rate': 0.1,
-    'eval_metric': 'AUC',
-    'loss_function': 'Logloss',
-    'random_seed': 0,
-    'metric_period': 100,
-    'od_wait': 200,
-    'task_type': 'GPU',
     'max_depth': 9,
-    "verbose": 100,
-    "has_time": True
+    "verbose": 100
 }
 run_catboost.main(params)
 
-
+params = {
+    'n_estimators': 12000,
+    'learning_rate': 0.1,
+    'eval_metric': 'AUC',
+    'loss_function': 'Logloss',
+    'random_seed': 0,
+    'metric_period': 100,
+    'od_wait': 200,
+    'task_type': 'GPU',
+    'max_depth': 10,
+    "verbose": 100
+}
+params = {
+    'n_estimators': 12000,
+    'learning_rate': 0.1,
+    'eval_metric': 'AUC',
+    'loss_function': 'Logloss',
+    'random_seed': 0,
+    'metric_period': 100,
+    'od_wait': 200,
+    'task_type': 'GPU',
+    'max_depth': 11,
+    "verbose": 100
+}
+run_catboost.main(params)
 #
 # print("run!")
 # run_timesplit.main()
