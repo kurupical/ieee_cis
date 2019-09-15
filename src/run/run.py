@@ -11,6 +11,7 @@ from tqdm import tqdm
 import gc
 import time
 from src.feature.common import reduce_mem_usage
+import json
 
 # hyper parameters
 n_folds = 5
@@ -25,26 +26,9 @@ remove_cols = ["TransactionDT",
                ]
 remove_cols.extend(pd.read_csv("cols.csv")["column"].values)
 
-is_reduce_memory = True
+is_reduce_memory = False
 select_cols = None # 全てのcolumnを選ぶ
 # select_cols = pd.read_csv("cols.csv")["column"].values
-
-params = {'num_leaves': 256,
-          'min_child_samples': 200,
-          'objective': 'binary',
-          'max_depth': -1,
-          'learning_rate': 0.01,
-          "boosting_type": "gbdt",
-          "subsample": 0.7,
-          "bagging_seed": 11,
-          "metric": 'auc',
-          "verbosity": -1,
-          'reg_alpha': 1,
-          'reg_lambda': 1,
-          'colsample_bytree': 0.05,
-          'early_stopping_rounds': 200,
-          'n_estimators': 20000,
-          }
 
 def _get_categorical_features(df):
     numerics = ['int8', 'int16', 'int32', 'int64', 'float16', 'float32', 'float64']
@@ -63,7 +47,25 @@ def _get_categorical_features(df):
     feats.extend([x for x in cat_cols if x not in feats])
     return feats
 
-def learning(df_train, df_test):
+def learning(df_train, df_test, params):
+
+    if params is None:
+        params = {'num_leaves': 256,
+                  'min_child_samples': 200,
+                  'objective': 'binary',
+                  'max_depth': -1,
+                  'learning_rate': 0.01,
+                  "boosting_type": "gbdt",
+                  "subsample": 0.7,
+                  "bagging_seed": 11,
+                  "metric": 'auc',
+                  "verbosity": -1,
+                  'reg_alpha': 1,
+                  'reg_lambda': 1,
+                  'colsample_bytree': 0.05,
+                  'early_stopping_rounds': 200,
+                  'n_estimators': 20000,
+                  }
 
     cat_feats = _get_categorical_features(df_test)
 
@@ -139,11 +141,16 @@ def learning(df_train, df_test):
     df_submit[target_col] = df_pred_test.drop(id_col, axis=1).mean(axis=1)
     return df_submit, df_pred_train, df_pred_test, df_importance, df_result
 
-def main(query=None):
+def main(query=None, params=None, experiment_name=""):
     # print("waiting...")
     # time.sleep(60*60*0.5)
-    output_dir = "../../output/{}".format(dt.now().strftime("%Y%m%d%H%M%S"))
+    output_dir = "../../output/{}_{}".format(dt.now().strftime("%Y%m%d%H%M%S"), experiment_name)
     os.makedirs(output_dir)
+
+    if params is not None:
+        with open("{}/param.json".format(output_dir), "w") as f:
+            json.dump(params, f)
+
 
     df_submit = pd.DataFrame()
     df_pred_train = pd.DataFrame()
@@ -168,7 +175,8 @@ def main(query=None):
         df_test = reduce_mem_usage(df_test)
 
     sub, pred_train, pred_test, imp, result= learning(df_train=df_train,
-                                                      df_test=df_test)
+                                                      df_test=df_test,
+                                                      params=params)
 
     df_submit = df_submit.append(sub, ignore_index=True)
     df_pred_train = df_pred_train.append(pred_train, ignore_index=True)

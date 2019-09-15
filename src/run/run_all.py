@@ -47,53 +47,28 @@ f_107_rolling.main()
 print("999_merge")
 # f_999_merge.main(nrows=None)
 print("run!")
-run.main()
-run.main(query="ProductCD =='C'")
-run.main(query="ProductCD =='W'")
+params = {'num_leaves': 256,
+          'min_child_samples': 200,
+          'objective': 'binary',
+          'max_depth': -1,
+          'learning_rate': 0.01,
+          "boosting_type": "gbdt",
+          "subsample": 0.7,
+          "bagging_seed": 11,
+          "metric": 'auc',
+          "verbosity": -1,
+          'reg_alpha': 1,
+          'reg_lambda': 1,
+          'colsample_bytree': 0.05,
+          'early_stopping_rounds': 200,
+          'n_estimators': 20000,
+          "pos_bagging_fraction": 0.8,
+          "neg_bagging_fraction": 0.2
+          }
+run.main(params=params, experiment_name="lightgbm")
 print("run!")
 # catboostいろいろ
-# Baseline
-params = {
-    'n_estimators': 12000,
-    'learning_rate': 0.05,
-    'eval_metric': 'AUC',
-    'loss_function': 'Logloss',
-    'random_seed': 0,
-    'metric_period': 100,
-    'od_wait': 200,
-    'task_type': 'GPU',
-    'max_depth': 9,
-    "verbose": 100
-}
-run_catboost.main(params)
 
-params = {
-    'n_estimators': 12000,
-    'learning_rate': 0.05,
-    'eval_metric': 'AUC',
-    'loss_function': 'Logloss',
-    'random_seed': 0,
-    'metric_period': 100,
-    'od_wait': 200,
-    'task_type': 'GPU',
-    'max_depth': 9,
-    "verbose": 100,
-    "bagging_temperature": 0.5
-}
-run_catboost.main(params)
-
-params = {
-    'n_estimators': 12000,
-    'learning_rate': 0.05,
-    'eval_metric': 'AUC',
-    'loss_function': 'Logloss',
-    'random_seed': 0,
-    'metric_period': 100,
-    'od_wait': 200,
-    'task_type': 'GPU',
-    'max_depth': 10,
-    "verbose": 100
-}
 params = {
     'n_estimators': 12000,
     'learning_rate': 0.05,
