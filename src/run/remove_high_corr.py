@@ -54,4 +54,3 @@ df_result["col2"] = result[:, 1]
 df_result["corr"] = result[:, 2].astype(float)
 df_result = df_result.query("corr < -0.9 or corr > 0.9")
 """
-df_result.to_csv("corr.csv", index=False)

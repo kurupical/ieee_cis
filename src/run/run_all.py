@@ -45,15 +45,17 @@ print("107_rolling")
 f_107_rolling.main()
 """
 print("999_merge")
-f_999_merge.main(nrows=80000)
+# f_999_merge.main(nrows=None)
 print("run!")
+run.main()
 run.main(query="ProductCD =='C'")
+run.main(query="ProductCD =='W'")
 print("run!")
 # catboostいろいろ
 # Baseline
 params = {
     'n_estimators': 12000,
-    'learning_rate': 0.1,
+    'learning_rate': 0.05,
     'eval_metric': 'AUC',
     'loss_function': 'Logloss',
     'random_seed': 0,
@@ -67,7 +69,22 @@ run_catboost.main(params)
 
 params = {
     'n_estimators': 12000,
-    'learning_rate': 0.1,
+    'learning_rate': 0.05,
+    'eval_metric': 'AUC',
+    'loss_function': 'Logloss',
+    'random_seed': 0,
+    'metric_period': 100,
+    'od_wait': 200,
+    'task_type': 'GPU',
+    'max_depth': 9,
+    "verbose": 100,
+    "bagging_temperature": 0.5
+}
+run_catboost.main(params)
+
+params = {
+    'n_estimators': 12000,
+    'learning_rate': 0.05,
     'eval_metric': 'AUC',
     'loss_function': 'Logloss',
     'random_seed': 0,
@@ -79,7 +96,7 @@ params = {
 }
 params = {
     'n_estimators': 12000,
-    'learning_rate': 0.1,
+    'learning_rate': 0.05,
     'eval_metric': 'AUC',
     'loss_function': 'Logloss',
     'random_seed': 0,
