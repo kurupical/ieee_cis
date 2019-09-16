@@ -34,13 +34,6 @@ def main():
     df_train = df_train[[x for x in df_train.columns if x not in original_features]]
     df_test = df_test[[x for x in df_test.columns if x not in original_features]]
 
-    print("train shape: {}".format(df_train.shape))
-    print(df_train.head(5))
-    print(df_train.describe())
-    print("test shape: {}".format(df_test.shape))
-    print(df_test.head(5))
-    print(df_test.describe())
-
     df_train.to_feather("../../data/105_pca/train/pca.feather")
     df_test.to_feather("../../data/105_pca/test/pca.feather")
 
