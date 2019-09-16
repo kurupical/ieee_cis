@@ -118,6 +118,23 @@ def max_values_and_col(df):
 
     return df
 
+def ProductCD_M_pattern_Wonly(df):
+    df["ProductW_Mpattern"] = df["M1"].astype(str) + df["M2"].astype(str) + df["M3"].astype(str) + \
+                              df["M4"].astype(str) + df["M5"].astype(str) + df["M6"].astype(str) + \
+                              df["M7"].astype(str) + df["M8"].astype(str) + df["M9"].astype(str)
+    df["ProductW_Mpattern"][df["ProductCD"] != "W"] = np.nan
+    return df
+
+def pattern_AMT_Decimal_keta(df):
+    cols = ["ProductCD",
+            "M1", "M2", "M3", "M4", "M5", "M6", "M7", "M8", "M9",
+            # "card1", "card2", "card3", "card4", "card5", "card6",
+            "addr1", "addr2"
+            ]
+    for col in cols:
+        df["{}_AMT_Decimal_keta".format(col)] = df[col].astype(str) + df["AMT_Decimal_keta"].astype(str)
+    return df
+
 def main():
 
     # 元データのロード
@@ -125,6 +142,12 @@ def main():
     df_test = pd.read_feather("../../data/baseline/test/baseline.feather")
 
     original_features = df_train.columns
+
+    df_train = pattern_AMT_Decimal_keta(df_train)
+    df_test = pattern_AMT_Decimal_keta(df_test)
+
+    df_train = ProductCD_M_pattern_Wonly(df_train)
+    df_test = ProductCD_M_pattern_Wonly(df_test)
 
     df_train = max_values_and_col(df_train)
     df_test = max_values_and_col(df_test)
