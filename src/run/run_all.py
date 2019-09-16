@@ -1,3 +1,5 @@
+# coding: utf-8
+
 from src.feature2 import f_001_basic_feature
 from src.feature2 import f_101_agg_id
 from src.feature2 import f_101_agg_id_2
