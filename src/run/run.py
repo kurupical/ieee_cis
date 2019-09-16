@@ -48,7 +48,7 @@ def _get_categorical_features(df):
     feats.extend([x for x in cat_cols if x not in feats])
     return feats
 
-def learning_lgbm(df_train, df_test, params):
+def learning_lgbm(df_train, df_test, params, extract_feature):
 
     if params is None:
         params = {'num_leaves': 256,
@@ -137,13 +137,16 @@ def learning_lgbm(df_train, df_test, params):
         del w_pred_train, w_pred_test, lgb_train, lgb_val, model
         gc.collect()
 
+        if extract_feature:
+            break
+
     df_submit = pd.DataFrame()
     df_submit[id_col] = df_test[id_col]
     df_submit[target_col] = df_pred_test.drop(id_col, axis=1).mean(axis=1)
     return df_submit, df_pred_train, df_pred_test, df_importance, df_result
 
 
-def learning_catboost(df_train, df_test, params):
+def learning_catboost(df_train, df_test, params, extract_feature):
     if params is None:
         params = {
             'n_estimators': 12000,
@@ -223,13 +226,16 @@ def learning_catboost(df_train, df_test, params):
         del w_pred_train, w_pred_test, model
         gc.collect()
 
+        if extract_feature:
+            break
+
     df_submit = pd.DataFrame()
     df_submit[id_col] = df_test[id_col]
     df_submit[target_col] = df_pred_test.drop(id_col, axis=1).mean(axis=1)
     return df_submit, df_pred_train, df_pred_test, df_importance, df_result
 
 
-def main(query=None, params=None, experiment_name="", mode="lightgbm"):
+def main(query=None, params=None, experiment_name="", mode="lightgbm", extract_feature=False):
     # print("waiting...")
     # time.sleep(60*60*0.5)
     output_dir = "../../output/{}_{}".format(dt.now().strftime("%Y%m%d%H%M%S"), experiment_name)
@@ -265,22 +271,28 @@ def main(query=None, params=None, experiment_name="", mode="lightgbm"):
     if mode == "lightgbm":
         sub, pred_train, pred_test, imp, result = learning_lgbm(df_train=df_train,
                                                                 df_test=df_test,
-                                                                params=params)
+                                                                params=params,
+                                                                extract_feature=extract_feature)
 
     if mode == "catboost":
         sub, pred_train, pred_test, imp, result = learning_catboost(df_train=df_train,
                                                                     df_test=df_test,
-                                                                    params=params)
+                                                                    params=params,
+                                                                    extract_feature=extract_feature)
 
     df_submit = df_submit.append(sub, ignore_index=True)
     df_pred_train = df_pred_train.append(pred_train, ignore_index=True)
     df_pred_test = df_pred_test.append(pred_test, ignore_index=True)
+    imp["sum_importance"] = imp.sum(axis=1)
     imp.to_csv("{}/importance.csv".format(output_dir))
 
     df_submit.to_csv("{}/submit.csv".format(output_dir), index=False)
     df_pred_train.to_csv("{}/predict_train.csv".format(output_dir), index=False)
     df_pred_test.to_csv("{}/submit_detail.csv".format(output_dir), index=False)
     result.to_csv("{}/result.csv".format(output_dir), index=False)
+
+    return imp
+
 
 if __name__ == "__main__":
     main()

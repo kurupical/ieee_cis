@@ -13,12 +13,15 @@ from src.feature2 import f_107_rolling
 from src.feature2 import f_108_pattern
 # from src.feature2 import f_989_merge_nn
 from src.feature2 import f_999_merge
+from src.run import remove_high_corr
 from src.run import run
 from src.run import run_timesplit
 # from src.run import run_nn
 from src.run import run_catboost
+import glob
 
 import time
+
 """
 # print("waiting..D..alpha/lambda==1, colsample=0.025")
 # time.sleep(60*60*1.5)
@@ -47,9 +50,8 @@ print("107_rolling")
 # f_107_rolling.main()
 f_108_pattern.main()
 """
-print("999_merge")
-f_999_merge.main(nrows=65000)
-print("run!")
+
+f_999_merge.main(nrows=60000)
 params = {'num_leaves': 256,
           'min_child_samples': 200,
           'objective': 'binary',
@@ -64,11 +66,24 @@ params = {'num_leaves': 256,
           'reg_lambda': 1,
           'colsample_bytree': 0.05,
           'early_stopping_rounds': 200,
-          'n_estimators': 20000
+          'n_estimators': 200,
           }
-run.main(params=params, experiment_name="lightgbm_allfeats_108pattern")
+
+
+imp = run.main(params=params, experiment_name="lightgbm_all_removeagg")
+imp = imp.sort_values("sum_importance", ascending=False)
+w_imp = imp[~imp["column"].str.contains("uid")]
+f_999_merge.main(nrows=None, drop_cols=w_imp.iloc[1500:])
 print("run!")
+imp = run.main(params=None, experiment_name="lightgbm_all_removeagg")
+
+f_999_merge.main(nrows=None)
+imp = imp.sort_values("sum_importance", ascending=False)
+f_999_merge.main(nrows=None, drop_cols=imp["column"].iloc[1500:])
+imp = run.main(params=None, experiment_name="lightgbm_1500", extract_feature=False)
+
 # catboostいろいろ
+
 
 params = {
     'n_estimators': 12000,
