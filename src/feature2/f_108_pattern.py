@@ -5,19 +5,19 @@ import os
 import datetime as dt
 
 def max_values_and_col(df):
-    def _get_maxcol(df, cols, col_name):
+    def _get_col(df, cols, col_name):
         """
-        グループのなかで最大の項目名（最大の項目が複数ある場合は全部）取得
+        グループのなかで最大/最小の項目名（最大の項目が複数ある場合は全部）取得
         :param df:
         :param cols:
         :param col_name:
         :return:
         """
         max_col_names = []
-        for is_max_cols in (df[cols].values - df[col_name].values.reshape(-1, 1) == 0):
+        for is_target_cols in (df[cols].values - df[col_name].values.reshape(-1, 1) == 0):
             w_max_col_name = ""
-            for i, is_max in enumerate(is_max_cols):
-                if is_max:
+            for i, is_target in enumerate(is_target_cols):
+                if is_target:
                     w_max_col_name += cols[i]
             max_col_names.append(w_max_col_name)
         return max_col_names
@@ -25,10 +25,16 @@ def max_values_and_col(df):
     def _get_value_and_col(df, cols, new_col_name, div_amt=False):
         print(new_col_name)
         df["{}_max".format(new_col_name)] = df[cols].max(axis=1)
-        df["{}_maxcol".format(new_col_name)] = _get_maxcol(df, cols, col_name="{}_max".format(new_col_name))
+        df["{}_maxcol".format(new_col_name)] = _get_col(df, cols, col_name="{}_max".format(new_col_name))
         if div_amt:
             df["div_{}_max_AMT".format(new_col_name)] = df["TransactionAmt"] / df["{}_max".format(new_col_name)]
 
+        df["{}_min".format(new_col_name)] = df[cols].min(axis=1)
+        df["{}_mincol".format(new_col_name)] = _get_col(df, cols, col_name="{}_max".format(new_col_name))
+        if div_amt:
+            df["div_{}_min_AMT".format(new_col_name)] = df["TransactionAmt"] / df["{}_min".format(new_col_name)]
+
+        df["diff_{}_max_min".format(new_col_name)] = df["{}_max".format(new_col_name)] - df["{}_min".format(new_col_name)]
         # 項目プレビュー
         if "isFraud" in df.columns:
             print(df[["{}_maxcol".format(new_col_name), "isFraud"]].groupby("{}_maxcol".format(new_col_name)).agg({"isFraud": ["count", "mean"]}))
@@ -70,6 +76,45 @@ def max_values_and_col(df):
                             new_col_name="id_01_06_08_10")
     df = _get_value_and_col(df, cols=["id_03", "id_05", "id_07", "id_09"],
                             new_col_name="id_03_05_07_09")
+
+    for i in range(15):
+        v1 = 202 + i
+        if i <= 5:
+            v2 = 263 + i
+            v3 = 306 + i
+        else:
+            v2 = 264 + i
+            v3 = 307 + i
+        col_name = "V{}_{}_{}".format(v1, v2, v3)
+        df = _get_value_and_col(df,
+                                cols=["V{}".format(v1), "V{}".format(v2), "V{}".format(v3)],
+                                new_col_name=col_name)
+    for i in range(12):
+        v1 = 126 + i
+        if i <= 5:
+            v2 = 202 + i
+            v3 = 263 + i
+            v4 = 306 + i
+            col_name = "V{}_{}_{}_{}".format(v1, v2, v3, v4)
+            df = _get_value_and_col(df,
+                                    cols=["V{}".format(v1), "V{}".format(v2), "V{}".format(v3), "V{}".format(v4)],
+                                    new_col_name=col_name)
+        else:
+            v2 = 205 + i
+            v3 = 267 + i
+            v4 = 310 + i
+            col_name = "V{}_{}_{}_{}".format(v1, v2, v3, v4)
+            df = _get_value_and_col(df,
+                                    cols=["V{}".format(v1), "V{}".format(v2), "V{}".format(v3), "V{}".format(v4)],
+                                    new_col_name=col_name)
+            if i <= 8:
+                v2 = 202 + i
+                v3 = 264 + i
+                v4 = 307 + i
+                col_name = "V{}_{}_{}_{}".format(v1, v2, v3, v4)
+                df = _get_value_and_col(df,
+                                        cols=["V{}".format(v1), "V{}".format(v2), "V{}".format(v3), "V{}".format(v4)],
+                                        new_col_name=col_name)
 
     return df
 
