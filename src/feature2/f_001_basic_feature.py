@@ -52,8 +52,8 @@ def remove_minor_cat(df_train, df_test, target_cols):
         valid_card = valid_card[valid_card > 2]
         valid_card = list(valid_card.index)
 
-        df_train[col] = np.where(df_train[col].isin(df_test[col]), df_train[col], np.nan)
-        df_test[col] = np.where(df_test[col].isin(df_train[col]), df_test[col], np.nan)
+        # df_train[col] = np.where(df_train[col].isin(df_test[col]), df_train[col], np.nan)
+        # df_test[col] = np.where(df_test[col].isin(df_train[col]), df_test[col], np.nan)
 
         df_train[col] = np.where(df_train[col].isin(valid_card), df_train[col], np.nan)
         df_test[col] = np.where(df_test[col].isin(valid_card), df_test[col], np.nan)
