@@ -55,35 +55,17 @@ f_108_pattern.main()
 f_999_merge.main(nrows=60000)
 imp = run.main(params=None, experiment_name="lightgbm_all_removeagg", extract_feature=True)
 imp = imp.sort_values("sum_importance", ascending=False)
-"""
-
 # test1
 f_999_merge.main(nrows=None, drop_cols=imp["column"].iloc[1800:])
-dummy = run.main(params=None, experiment_name="lightgbm_1800", extract_feature=False)
-dummy = run.main(query="ProductCD == 'W'", params=None, experiment_name="lightgbm_1500_W", extract_feature=False)
-dummy = run.main(query="ProductCD == 'C'", params=None, experiment_name="lightgbm_1500_C", extract_feature=False)
-"""
+dummy = run.main(params=None, experiment_name="lightgbm_1800", extract_feature=False, is_reduce_memory=True)
+dummy = run.main(query="ProductCD == 'W'", params=None, experiment_name="lightgbm_1800_W", extract_feature=False)
+dummy = run.main(query="ProductCD == 'C'", params=None, experiment_name="lightgbm_1800_C", extract_feature=False)
+
 # test2
 w_imp = imp[~imp["column"].str.contains("uid")]
 w_imp2 = imp[imp["column"].str.contains("uid")]
 f_999_merge.main(nrows=None, drop_cols=np.concatenate([w_imp["column"].iloc[1800:].values, w_imp2["column"].values]))
 dummy = run.main(params=None, experiment_name="lightgbm_all_remove_uid")
-# catboostいろいろ
-
-f_999_merge.main(nrows=None, drop_cols=imp["column"].iloc[1800:])
-params = {
-    'n_estimators': 12000,
-    'learning_rate': 0.01,
-    'eval_metric': 'AUC',
-    'loss_function': 'Logloss',
-    'random_seed': 0,
-    'metric_period': 100,
-    'od_wait': 200,
-    'task_type': 'GPU',
-    'max_depth': 11,
-    "verbose": 100
-}
-run_catboost.main(params)
 
 params = {
     'n_estimators': 12000,
@@ -94,11 +76,35 @@ params = {
     'metric_period': 100,
     'od_wait': 200,
     'task_type': 'GPU',
-    'max_depth': 12,
+    'max_depth': 8,
     "verbose": 100
 }
-run_catboost.main(params)
+dummy = run.main(params=params, mode="catboost", experiment_name="catboost_1800_depth8", is_reduce_memory=True)
 
-#
-# print("run!")
-# run_timesplit.main()
+params = {
+    'n_estimators': 12000,
+    'learning_rate': 0.01,
+    'eval_metric': 'AUC',
+    'loss_function': 'Logloss',
+    'random_seed': 0,
+    'metric_period': 100,
+    'od_wait': 200,
+    'task_type': 'GPU',
+    'max_depth': 9,
+    "verbose": 100
+}
+dummy = run.main(params=params, mode="catboost", experiment_name="catboost_1800_depth9", is_reduce_memory=True)
+
+params = {
+    'n_estimators': 12000,
+    'learning_rate': 0.01,
+    'eval_metric': 'AUC',
+    'loss_function': 'Logloss',
+    'random_seed': 0,
+    'metric_period': 100,
+    'od_wait': 200,
+    'task_type': 'GPU',
+    'max_depth': 10,
+    "verbose": 100
+}
+dummy = run.main(params=params, mode="catboost", experiment_name="catboost_1800_depth10", is_reduce_memory=True)

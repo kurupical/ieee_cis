@@ -28,7 +28,7 @@ def postprocess(df):
 # print("waiting...")
 # time.sleep(60*60*0.2)
 
-def main(merge_features=None, nrows=None, drop_cols=None, fillna=True):
+def main(merge_features=None, nrows=None, drop_cols=None, fillna=False):
     print("merge!")
     if merge_features is None:
         merge_features = []
@@ -41,6 +41,7 @@ def main(merge_features=None, nrows=None, drop_cols=None, fillna=True):
         merge_features.extend(glob.glob("../../data/101_agg_id_V/train/*.feather"))
         # merge_features.extend(glob.glob("../../data/106_shift/train/*.feather"))
         merge_features.extend(glob.glob("../../data/108_pattern/train/*.feather"))
+        merge_features.extend(glob.glob("../../data/109_rolling/train/*.feather"))
         merge_features = [x.replace("train", "{}") for x in merge_features]
 
     train_idx = np.arange(590540)

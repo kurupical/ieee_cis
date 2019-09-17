@@ -30,7 +30,7 @@ def max_values_and_col(df):
             df["div_{}_max_AMT".format(new_col_name)] = df["TransactionAmt"] / df["{}_max".format(new_col_name)]
 
         df["{}_min".format(new_col_name)] = df[cols].min(axis=1)
-        df["{}_mincol".format(new_col_name)] = _get_col(df, cols, col_name="{}_max".format(new_col_name))
+        df["{}_mincol".format(new_col_name)] = _get_col(df, cols, col_name="{}_min".format(new_col_name))
         if div_amt:
             df["div_{}_min_AMT".format(new_col_name)] = df["TransactionAmt"] / df["{}_min".format(new_col_name)]
 
