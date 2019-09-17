@@ -28,7 +28,8 @@ def postprocess(df):
 # print("waiting...")
 # time.sleep(60*60*0.2)
 
-def main(merge_features=None, nrows=None):
+def main(merge_features=None, nrows=None, drop_cols=None, fillna=True):
+    print("merge!")
     if merge_features is None:
         merge_features = []
         merge_features = glob.glob("../../data/101_agg_id/train/*.feather")
@@ -48,14 +49,16 @@ def main(merge_features=None, nrows=None):
     if nrows is not None:
         train_idx = np.sort(np.concatenate([df_train[df_train["isFraud"]==1].index.to_list(),
                                             np.random.choice(train_idx, nrows, replace=False)]))
-        test_idx = np.sort(np.random.choice(test_idx, nrows, replace=False))
+        test_idx = np.sort(np.random.choice(test_idx, 100, replace=False))
     # print(f)
     df_train = df_train.iloc[train_idx]
     dfs = [df_train]
-    drop_cols = pd.read_csv("../feature2/cols.csv")["column"].values
+    if drop_cols is None:
+        drop_cols = pd.read_csv("../feature2/cols.csv")["column"].values
     dfs.extend([pd.read_feather(x.format("train")).iloc[train_idx].drop(drop_cols, axis=1, errors="ignore") for x in merge_features])
     df_train = pd.concat(dfs, axis=1)
-    df_train = postprocess(df_train)
+    if fillna:
+        df_train = postprocess(df_train)
 
     del dfs
     gc.collect()
@@ -81,7 +84,8 @@ def main(merge_features=None, nrows=None):
     df_test = pd.concat(dfs, axis=1)
     del dfs
     gc.collect()
-    df_test = postprocess(df_test)
+    if fillna:
+        df_test = postprocess(df_test)
     df_test = df_test.drop(drop_cols, axis=1, errors="ignore") #なぜか入れないとちゃんと削除されない。。
     df_test = df_test.drop(drop_cols_2, axis=1, errors="ignore")
 

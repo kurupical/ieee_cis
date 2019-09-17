@@ -27,7 +27,7 @@ remove_cols = ["TransactionDT",
                ]
 remove_cols.extend(pd.read_csv("cols.csv")["column"].values)
 
-is_reduce_memory = False
+is_reduce_memory = True
 select_cols = None # 全てのcolumnを選ぶ
 # select_cols = pd.read_csv("cols.csv")["column"].values
 
@@ -162,6 +162,7 @@ def learning_catboost(df_train, df_test, params, extract_feature):
         }
     cat_feats = _get_categorical_features(df_test)
 
+
     for f in cat_feats:
         # print(f)
         df_train[f] = df_train[f].astype(str)
@@ -235,7 +236,7 @@ def learning_catboost(df_train, df_test, params, extract_feature):
     return df_submit, df_pred_train, df_pred_test, df_importance, df_result
 
 
-def main(query=None, params=None, experiment_name="", mode="lightgbm", extract_feature=False):
+def main(query=None, params=None, experiment_name="", mode="lightgbm", extract_feature=False, is_reduce_memory=False):
     # print("waiting...")
     # time.sleep(60*60*0.5)
     output_dir = "../../output/{}_{}".format(dt.now().strftime("%Y%m%d%H%M%S"), experiment_name)
@@ -263,6 +264,8 @@ def main(query=None, params=None, experiment_name="", mode="lightgbm", extract_f
     if query is not None:
         df_train = df_train.query(query).reset_index(drop=True)
         df_test = df_test.query(query).reset_index(drop=True)
+    if extract_feature:
+        is_reduce_memory = False
 
     if is_reduce_memory:
         df_train = reduce_mem_usage(df_train)
