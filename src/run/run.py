@@ -3,7 +3,7 @@ import lightgbm as lgb
 import os
 import numpy as np
 from datetime import datetime as dt
-from sklearn.model_selection import KFold
+from sklearn.model_selection import StratifiedKFold, KFold
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import roc_auc_score
 import copy
@@ -79,7 +79,10 @@ def learning_lgbm(df_train, df_test, params, extract_feature):
         df_test[f] = le.transform(df_test[f])
 
     i = 0
-    folds = KFold(n_splits=n_folds)
+    if extract_feature:
+        folds = KFold(n_splits=n_folds)
+    else:
+        folds = StratifiedKFold(n_splits=n_folds, shuffle=False)
 
     print("-----------------------------------")
     print("LOOP {} / {}".format(i+1, n_loop))
@@ -92,7 +95,7 @@ def learning_lgbm(df_train, df_test, params, extract_feature):
     df_importance = pd.DataFrame()
     df_result = pd.DataFrame()
     df_importance["column"] = df_train.drop([id_col, target_col], axis=1).columns
-    for n_fold, (train_idx, val_idx) in enumerate(folds.split(df_train)):
+    for n_fold, (train_idx, val_idx) in enumerate(folds.split(df_train, y=df_train[target_col])):
         print("-----------------------------------")
         print("Fold {} / {}".format(n_fold+1, n_folds))
         print("-----------------------------------")
@@ -169,7 +172,7 @@ def learning_catboost(df_train, df_test, params, extract_feature):
         df_test[f] = df_test[f].astype(str)
 
     i = 0
-    folds = KFold(n_splits=n_folds)
+    folds = StratifiedKFold(n_splits=n_folds, shuffle=False)
 
     print("-----------------------------------")
     print("LOOP {} / {}".format(i+1, n_loop))
@@ -182,7 +185,7 @@ def learning_catboost(df_train, df_test, params, extract_feature):
     df_importance = pd.DataFrame()
     df_result = pd.DataFrame()
     df_importance["column"] = df_train.drop([id_col, target_col], axis=1).columns
-    for n_fold, (train_idx, val_idx) in enumerate(folds.split(df_train)):
+    for n_fold, (train_idx, val_idx) in enumerate(folds.split(df_train, y=df_train[target_col])):
         print("-----------------------------------")
         print("Fold {} / {}".format(n_fold+1, n_folds))
         print("-----------------------------------")
