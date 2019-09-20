@@ -13,6 +13,7 @@ import time
 from src.feature.common import reduce_mem_usage
 from catboost import  CatBoostClassifier
 import json
+from scipy.stats import ks_2samp
 
 # hyper parameters
 n_folds = 5
@@ -48,7 +49,7 @@ def _get_categorical_features(df):
     feats.extend([x for x in cat_cols if x not in feats])
     return feats
 
-def learning_lgbm(df_train, df_test, params, extract_feature):
+def learning_lgbm(df_train, df_test, params, extract_feature, folds):
 
     if params is None:
         params = {'num_leaves': 256,
@@ -79,10 +80,12 @@ def learning_lgbm(df_train, df_test, params, extract_feature):
         df_test[f] = le.transform(df_test[f])
 
     i = 0
+    """
     if extract_feature:
         folds = KFold(n_splits=n_folds)
     else:
-        folds = StratifiedKFold(n_splits=n_folds, shuffle=False)
+        folds = KFold(n_splits=n_folds)
+    """
 
     print("-----------------------------------")
     print("LOOP {} / {}".format(i+1, n_loop))
@@ -90,12 +93,13 @@ def learning_lgbm(df_train, df_test, params, extract_feature):
 
     df_pred_train = pd.DataFrame()
     df_pred_test = pd.DataFrame()
-    print(df_test)
+    print(df_train.shape)
+    print(df_test.shape)
     df_pred_test[id_col] = df_test[id_col]
     df_importance = pd.DataFrame()
     df_result = pd.DataFrame()
     df_importance["column"] = df_train.drop([id_col, target_col], axis=1).columns
-    for n_fold, (train_idx, val_idx) in enumerate(folds.split(df_train, y=df_train[target_col])):
+    for n_fold, (train_idx, val_idx) in enumerate(folds.split(df_train, df_train[target_col])):
         print("-----------------------------------")
         print("Fold {} / {}".format(n_fold+1, n_folds))
         print("-----------------------------------")
@@ -105,6 +109,24 @@ def learning_lgbm(df_train, df_test, params, extract_feature):
         # if n_fold == 1: continue
         # if n_fold == 2: continue
         # if n_fold == 4: continue
+        print(train_idx)
+        print(val_idx)
+        features_check = []
+
+        if not extract_feature:
+            check_cols = [x for x in df_test.drop(["TransactionID"], axis=1).columns if x not in cat_feats]
+            for col in check_cols:
+                features_check.append(ks_2samp(df_train.iloc[train_idx][col], df_test[col])[1])
+
+            features_check = pd.Series(features_check, index=check_cols).sort_values()
+            drop_cols = features_check[features_check<0.001].index
+            print("drop: {}".format(len(drop_cols)))
+            print(drop_cols)
+            df_train = df_train.drop(drop_cols, axis=1)
+            df_test = df_test.drop(drop_cols, axis=1)
+        if extract_feature:
+            if n_fold != 0:
+                continue
 
         lgb_train = lgb.Dataset(data=df_train.drop([id_col, target_col], axis=1).iloc[train_idx], label=df_train[target_col].iloc[train_idx])
         lgb_val = lgb.Dataset(data=df_train.drop([id_col, target_col], axis=1).iloc[val_idx], label=df_train[target_col].iloc[val_idx])
@@ -140,16 +162,13 @@ def learning_lgbm(df_train, df_test, params, extract_feature):
         del w_pred_train, w_pred_test, lgb_train, lgb_val, model
         gc.collect()
 
-        if extract_feature:
-            break
-
     df_submit = pd.DataFrame()
     df_submit[id_col] = df_test[id_col]
     df_submit[target_col] = df_pred_test.drop(id_col, axis=1).mean(axis=1)
     return df_submit, df_pred_train, df_pred_test, df_importance, df_result
 
 
-def learning_catboost(df_train, df_test, params, extract_feature):
+def learning_catboost(df_train, df_test, params, extract_feature, folds):
     if params is None:
         params = {
             'n_estimators': 12000,
@@ -172,7 +191,7 @@ def learning_catboost(df_train, df_test, params, extract_feature):
         df_test[f] = df_test[f].astype(str)
 
     i = 0
-    folds = StratifiedKFold(n_splits=n_folds, shuffle=False)
+    # folds = KFold(n_splits=n_folds, shuffle=False)
 
     print("-----------------------------------")
     print("LOOP {} / {}".format(i+1, n_loop))
@@ -239,7 +258,8 @@ def learning_catboost(df_train, df_test, params, extract_feature):
     return df_submit, df_pred_train, df_pred_test, df_importance, df_result
 
 
-def main(query=None, params=None, experiment_name="", mode="lightgbm", extract_feature=False, is_reduce_memory=False):
+def main(query=None, params=None, experiment_name="", mode="lightgbm", extract_feature=False, is_reduce_memory=False,
+         folds=None):
     # print("waiting...")
     # time.sleep(60*60*0.5)
     output_dir = "../../output/{}_{}".format(dt.now().strftime("%Y%m%d%H%M%S"), experiment_name)
@@ -278,13 +298,15 @@ def main(query=None, params=None, experiment_name="", mode="lightgbm", extract_f
         sub, pred_train, pred_test, imp, result = learning_lgbm(df_train=df_train,
                                                                 df_test=df_test,
                                                                 params=params,
-                                                                extract_feature=extract_feature)
+                                                                extract_feature=extract_feature,
+                                                                folds=folds)
 
     if mode == "catboost":
         sub, pred_train, pred_test, imp, result = learning_catboost(df_train=df_train,
                                                                     df_test=df_test,
                                                                     params=params,
-                                                                    extract_feature=extract_feature)
+                                                                    extract_feature=extract_feature,
+                                                                    folds=folds)
 
     df_submit = df_submit.append(sub, ignore_index=True)
     df_pred_train = df_pred_train.append(pred_train, ignore_index=True)
