@@ -66,16 +66,16 @@ def main():
                 "TEMP__uid2+DT2", "TEMP__uid3+DT2"]
 
     # indexの重複をなくす対策
-    for i in range(len(df_train["TEMP__DT"])):
-        df_train["TEMP__DT"].iloc[i] = df_train["TEMP__DT"].iloc[i] + dt.timedelta(milliseconds=i%1000)
-    for i in range(len(df_test["TEMP__DT"])):
-        df_test["TEMP__DT"].iloc[i] = df_test["TEMP__DT"].iloc[i] + dt.timedelta(milliseconds=i%1000)
+    df_train["TEMP__timedelta"] = [dt.timedelta(milliseconds=i%1000) for i in range(len(df_train))]
+    df_test["TEMP__timedelta"] = [dt.timedelta(milliseconds=i%1000) for i in range(len(df_test))]
 
+    df_train["TEMP__DT"] = df_train["TEMP__timedelta"] + df_train["TEMP__DT"]
+    df_test["TEMP__DT"] = df_test["TEMP__timedelta"] + df_test["TEMP__DT"]
     df_train, df_test = id_aggregates(df_train, df_test,
                                       agg_cols=agg_cols,
                                       target_cols=["TransactionAmt"],
                                       agg_types=["mean", "count", "sum"],
-                                      agg_times=["15m", "1d", "7d", "14d"])
+                                      agg_times=["1h", "1d", "7d", "30d"])
 
     df_train = df_train[[x for x in df_train.columns if x not in original_features]]
     df_test = df_test[[x for x in df_test.columns if x not in original_features]]
