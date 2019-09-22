@@ -31,6 +31,19 @@ def main():
                                   target_cols=["C{}".format(x) for x in range(1, 14 + 1)],
                                   n_components=3)
 
+    groups = []
+    groups.append(["V{}".format(x) for x in range(1, 11+1)])
+    groups.append(["V{}".format(x) for x in range(12, 34+1)])
+    groups.append(["V{}".format(x) for x in range(35, 52+1)])
+    groups.append(["V{}".format(x) for x in range(53, 74+1)])
+    groups.append(["V{}".format(x) for x in range(75, 94+1)])
+    groups.append(["V{}".format(x) for x in range(95, 137+1)])
+    groups.append(["V{}".format(x) for x in range(138, 166+1)])
+    groups.append(["V{}".format(x) for x in range(167, 216+1)])
+    groups.append(["V{}".format(x) for x in range(217, 278+1)])
+    groups.append(["V{}".format(x) for x in range(279, 321+1)])
+    groups.append(["V{}".format(x) for x in range(322, 339+1)])
+
     df_train = df_train[[x for x in df_train.columns if x not in original_features]]
     df_test = df_test[[x for x in df_test.columns if x not in original_features]]
 
