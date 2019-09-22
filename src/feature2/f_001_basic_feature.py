@@ -146,9 +146,11 @@ def identify_id(df):
     df["TEMP__uid4"] = (df["V160"] - df["V159"]).astype(str)
     df["TEMP__uid5"] = df["addr2"].astype(str)+"_"+df["id_14"].astype(str)+"_"+df["id_19"].astype(str)+df["id_20"].astype(str)+df["P_emaildomain"].astype(str)
     df["TEMP__uid2+dist"] = df["TEMP__uid2"].astype(str) + "_" + df["dist1"].fillna("none").astype(str) + "_" + df["dist2"].fillna("none").astype(str)
+    df["TEMP__uid2+nanpt"] = df["TEMP__uid2"].astype(str) + "_" + df["nan_pattern_M"].fillna("none").astype(str) + "_" + df["nan_pattern_V"].fillna("none").astype(str)
     df["TEMP__uid2+DT"] = df["TEMP__uid2"].astype(str) + "_" + (df["TEMP__DT_D"] - df["D1"]).astype(str)
     df["TEMP__uid3+DT"] = df["TEMP__uid3"].astype(str) + "_" + (df["TEMP__DT_D"] - df["D1"]).astype(str)
     df["TEMP__uid2+dist+DT"] = df["TEMP__uid2+dist"].astype(str) + "_" + (df["TEMP__DT_D"] - df["D1"]).astype(str)
+    df["TEMP__uid2+nanpt+DT"] = df["TEMP__uid2+nanpt"].astype(str) + "_" + (df["TEMP__DT_D"] - df["D1"]).astype(str)
     # df["TEMP__uid2+DT"] = df["TEMP__uid2"].astype(str) + "_" + (df["TEMP__DT_D"] - df["TEMP__D1_zero_to_D10"]).astype(str)
     # df["TEMP__uid3+DT"] = df["TEMP__uid3"].astype(str) + "_" + (df["TEMP__DT_D"] - df["TEMP__D1_zero_to_D10"]).astype(str)
     df["TEMP__uid2+DT2"] = df["TEMP__uid2+DT"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D10"]).fillna("none").astype(str)
@@ -164,8 +166,8 @@ def identify_id(df):
     df["TEMP__uid2+DT+M4"] = df["TEMP__uid2+DT"].astype(str)+"_"+(df["M4"]).astype(str)
     df["TEMP__uid3+DT+M4"] = df["TEMP__uid3+DT"].astype(str)+"_"+(df["M4"]).astype(str)
 
-    for col in ["TEMP__uid", "TEMP__uid2", "TEMP__uid3", "TEMP__uid2+dist",
-                "TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid2+dist+DT",
+    for col in ["TEMP__uid", "TEMP__uid2", "TEMP__uid3", "TEMP__uid2+dist", "TEMP__uid2+nanpt",
+                "TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid2+dist+DT", "TEMP__uid2+nanpt+DT",
                 "TEMP__uid2+DT2", "TEMP__uid3+DT2",
                 "TEMP__uid2+DT3", "TEMP__uid3+DT3",
                 "TEMP__uid2+DT+D", "TEMP__uid2+DT+W", "TEMP__uid2+DT+H",
@@ -218,9 +220,12 @@ def get_decimal(df):
     df["AMT_Decimal_keta"] = [str(len(x)-2) for x in df["AMT_Decimal"].values]
     return df
 
-def main():
+def main(is_debug=False):
     df_train = pd.read_feather("../../data/original/train_all.feather")
     df_test = pd.read_feather("../../data/original/test_all.feather")
+
+    df_train = pd.merge(df_train, pd.read_feather("../../data/110_nan_pattern/train/nan.feather"), how="left", on="TransactionID")
+    df_test = pd.merge(df_test, pd.read_feather("../../data/110_nan_pattern/test/nan.feather"), how="left", on="TransactionID")
 
     df_train = get_decimal(df_train)
     df_test = get_decimal(df_test)
@@ -255,6 +260,9 @@ def main():
     print(df_train.head(5))
     print("test shape: {}".format(df_test.shape))
     print(df_test.tail(5))
+    if is_debug:
+        df_train = df_train.head(200)
+        df_test = df_test.head(200)
     df_train.to_feather("../../data/baseline/train/baseline.feather")
     df_test.to_feather("../../data/baseline/test/baseline.feather")
 

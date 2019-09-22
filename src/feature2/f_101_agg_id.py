@@ -94,8 +94,8 @@ def main():
     original_features = df_train.columns
 
     agg_cols = ["card1", "card2", "card3", "card5",
-                "TEMP__uid", "TEMP__uid2", "TEMP__uid3", "TEMP__uid2+dist",
-                "TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid2+dist+DT",
+                "TEMP__uid", "TEMP__uid2", "TEMP__uid3", "TEMP__uid2+dist", "TEMP__uid2+nanpt",
+                "TEMP__uid2+DT", "TEMP__uid3+DT", "TEMP__uid2+dist+DT", "TEMP__uid2+nanpt+DT",
                 "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4",
                 "TEMP__uid2+DT2", "TEMP__uid3+DT2",
                 "TEMP__uid2+DT3", "TEMP__uid3+DT3"]
@@ -115,13 +115,13 @@ def main():
                                       agg_types=["count", "sum"])
     df_train, df_test = id_aggregates(df_train, df_test,
                                       agg_cols=["DT_isDecember", "TEMP__uid2+DT", "TEMP__uid3+DT",
-                                                "TEMP__uid2+DT3", "TEMP__uid3+DT", "TEMP__uid2+dist+DT",
+                                                "TEMP__uid2+DT3", "TEMP__uid3+DT", "TEMP__uid2+dist+DT", "TEMP__uid2+nanpt+DT",
                                                 "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"],
                                       target_cols=["id_{0:02d}".format(x) for x in range(1, 11+1)],
                                       agg_types=["mean", "std"])
     df_train, df_test = id_aggregates(df_train, df_test,
                                       agg_cols=["TEMP__uid2+DT", "TEMP__uid3+DT",
-                                                "TEMP__uid2+DT3", "TEMP__uid3+DT3", "TEMP__uid2+dist+DT",
+                                                "TEMP__uid2+DT3", "TEMP__uid3+DT3", "TEMP__uid2+dist+DT", "TEMP__uid2+nanpt+DT",
                                                 "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"],
                                       target_cols=["C{}".format(x) for x in range(1, 14+1)],
                                       agg_types=["mean", "std"])
