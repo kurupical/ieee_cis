@@ -44,7 +44,7 @@ def max_values_and_col(df):
                             new_col_name="D1_2_10_11_12_13_14_15")
     df = _get_value_and_col(df, cols=["D3", "D4", "D5", "D6", "D7"],
                             new_col_name="D3_4_5_6_7")
-    df = _get_value_and_col(df, cols=["C{}".format(x) for x in range(1, 14+1)],
+    df = _get_value_and_col(df, cols=["C{}".format(x) for x in range(1, 14+1) if x != 13],
                             new_col_name="allC")
 
     # money
@@ -115,6 +115,75 @@ def max_values_and_col(df):
                 df = _get_value_and_col(df,
                                         cols=["V{}".format(v1), "V{}".format(v2), "V{}".format(v3), "V{}".format(v4)],
                                         new_col_name=col_name)
+
+    # other 2
+    groups = []
+    groups.append(["V{}".format(x) for x in range(95, 97+1)])
+    groups.append(["V{}".format(x) for x in range(104, 106+1)])
+    groups.append(["V96", "V105", "V296", "V298"])
+    groups.append(["V95", "V104"])
+    groups.append(["V97", "V106"])
+    groups.append(["V99", "V285"])
+    groups.append(["V100", "V287"])
+    for group in groups:
+        df = _get_value_and_col(df, cols=group, new_col_name="_".join(group))
+
+    # similar with C1
+    groups = []
+    groups.append(["V44", "V86"])
+    groups.append(["V45", "V87"])
+    groups.append(["V44", "V45"])
+    groups.append(["V86", "V87"])
+    groups.append(["V{}".format(x) for x in range(198, 200 + 1)])
+    groups.append(["V{}".format(x) for x in range(257, 259 + 1)])
+    for i in range(3):
+        groups.append(["V{}".format(198 + i),
+                       "V{}".format(257 + i)])
+    for group in groups:
+        df = _get_value_and_col(df, cols=group+["C1"], new_col_name="_".join(group+["C1"]))
+
+    # similar with C2
+    groups = []
+    groups.append(["V37", "V55", "V77"])
+    groups.append(["V38", "V56", "V78"])
+    groups.append(["V37", "V38"])
+    groups.append(["V55", "V56"])
+    groups.append(["V77", "V78"])
+    groups.append(["V{}".format(x) for x in range(167, 171+1)])
+    groups.append(["V{}".format(x) for x in range(176, 179+1)])
+    groups.append(["V{}".format(x) for x in range(217, 222+1)])
+    groups.append(["V{}".format(x) for x in range(228, 233+1)])
+    groups.append(["V{}".format(x) for x in range(279, 283+1)])
+    groups.append(["V{}".format(x) for x in range(290, 295+1)])
+
+    for i in range(5):
+        if i == 1:
+            groups.append(["V{}".format(167 + i),
+                           "V{}".format(279 + i),
+                           "V97"])
+            continue
+
+        groups.append(["V{}".format(167+i),
+                       "V{}".format(279+i)])
+    for i in range(6):
+        if i == 3:
+            groups.append(["V{}".format(217 + i),
+                           "V{}".format(228 + i),
+                           "V{}".format(290 + i),
+                           "V102"])
+            continue
+        if i == 4:
+            groups.append(["V{}".format(217 + i),
+                           "V{}".format(228 + i),
+                           "V{}".format(290 + i),
+                           "V103"])
+            continue
+        groups.append(["V{}".format(217+i),
+                       "V{}".format(228+i),
+                       "V{}".format(290+i)])
+
+    for group in groups:
+        df = _get_value_and_col(df, cols=group+["C2"], new_col_name="_".join(group+["C2"]))
 
     return df
 

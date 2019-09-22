@@ -104,11 +104,93 @@ def make_similarV_feature2(df):
 
     return df
 
+def make_similarV_feature3(df):
+    print(sys._getframe().f_code.co_name)
+
+    def meanstd_diff(group):
+        df["mean_{}".format("_".join(group))] = df[group].mean(axis=1)
+        df["std_{}".format("_".join(group))] = df[group].std(axis=1)
+        for col in group:
+            df["diff_mean_{}".format("_".join(group))] = df[col] - df["mean_{}".format("_".join(group))]
+
+        return df
+
+    groups = []
+    # other
+    groups.append(["V{}".format(x) for x in range(95, 97+1)])
+    groups.append(["V{}".format(x) for x in range(104, 106+1)])
+    groups.append(["V96", "V105", "V296", "V298"])
+    groups.append(["V95", "V104"])
+    groups.append(["V97", "V106"])
+    groups.append(["V99", "V285"])
+    groups.append(["V100", "V287"])
+
+    # similar with C1
+    groups.append(["V44", "V86"])
+    groups.append(["V45", "V87"])
+    groups.append(["V44", "V45"])
+    groups.append(["V86", "V87"])
+    groups.append(["V{}".format(x) for x in range(198, 200+1)])
+    groups.append(["V{}".format(x) for x in range(257, 259+1)])
+    for i in range(3):
+        groups.append(["V{}".format(198+i),
+                       "V{}".format(257+i)])
+
+    # similar with C2
+    groups = []
+    groups.append(["V37", "V55", "V77"])
+    groups.append(["V38", "V56", "V78"])
+    groups.append(["V37", "V38"])
+    groups.append(["V55", "V56"])
+    groups.append(["V77", "V78"])
+    groups.append(["V{}".format(x) for x in range(167, 171+1)])
+    groups.append(["V{}".format(x) for x in range(176, 179+1)])
+    groups.append(["V{}".format(x) for x in range(217, 222+1)])
+    groups.append(["V{}".format(x) for x in range(228, 233+1)])
+    groups.append(["V{}".format(x) for x in range(279, 283+1)])
+    groups.append(["V{}".format(x) for x in range(290, 295+1)])
+
+    for i in range(5):
+        if i == 1:
+            groups.append(["V{}".format(167 + i),
+                           "V{}".format(279 + i),
+                           "V97"])
+            continue
+
+        groups.append(["V{}".format(167+i),
+                       "V{}".format(279+i)])
+    for i in range(6):
+        if i == 3:
+            groups.append(["V{}".format(217 + i),
+                           "V{}".format(228 + i),
+                           "V{}".format(290 + i),
+                           "V102"])
+            continue
+        if i == 4:
+            groups.append(["V{}".format(217 + i),
+                           "V{}".format(228 + i),
+                           "V{}".format(290 + i),
+                           "V103"])
+            continue
+        groups.append(["V{}".format(217+i),
+                       "V{}".format(228+i),
+                       "V{}".format(290+i)])
+
+    for group in groups:
+        df = meanstd_diff(group)
+
+    return df
+
 def isDecember_feature(df):
     print(sys._getframe().f_code.co_name)
     df["DT_isDecember__ProductCD"] = df["DT_isDecember"].astype(str) + "_" + df["ProductCD"].astype(str)
     df["DT_isDecember__allM"] = df[["DT_isDecember"] + ["M{}".format(x) for x in range(1, 9+1)]].apply(join_string).astype(str)
     df["DT_isDecember__id01isnan"] = df["DT_isDecember"].astype(str) + "_" + df["id_01"].isnull().astype(int).astype(str)
+
+    return df
+
+def V_feature_special(df):
+    df["diff_V96_V99V102"] = df["V96"] - df["V99"] + df["V102"]
 
     return df
 
@@ -126,6 +208,12 @@ def main():
 
     df_train = make_similarV_feature2(df_train)
     df_test = make_similarV_feature2(df_test)
+
+    df_train = make_similarV_feature3(df_train)
+    df_test = make_similarV_feature3(df_test)
+
+    df_train = V_feature_special(df_train)
+    df_test = V_feature_special(df_test)
 
     df_train = df_train[[x for x in df_train.columns if x not in original_features]]
     df_test = df_test[[x for x in df_test.columns if x not in original_features]]
