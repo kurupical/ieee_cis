@@ -22,7 +22,12 @@ def postprocess(df):
             df[col] = df[col].fillna("NAN_values").astype(str)
         return df
 
+    def fillna_D(df):
+        for col in ["D{}".format(x) for x in range(1, 15+1)]:
+            df[col] = df[col].fillna(-999)
+
     df = fillna(df)
+    df = fillna_D(df)
     return df
 
 # print("waiting...")
