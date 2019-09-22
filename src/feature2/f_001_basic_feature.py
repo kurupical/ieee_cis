@@ -210,9 +210,6 @@ def main():
     df_train = reduce_mem_usage(df_train, mode="save")
     df_test = reduce_mem_usage(df_test, mode="save")
 
-    df_train = make_nan_pattern(df_train)
-    df_test = make_nan_pattern(df_test)
-
     df_test = fix_data_existing_only_test(df_test)
 
     df_train = datefeature(df_train)
