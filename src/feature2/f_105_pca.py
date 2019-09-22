@@ -5,6 +5,7 @@ from sklearn.preprocessing import StandardScaler
 
 
 def apply_PCA(df_train, df_test, target_cols, n_components):
+    print("PCA: {}".format(target_cols))
     w_ary = pd.concat([df_train[target_cols], df_test[target_cols]]).fillna(0).values
 
     w_ary = StandardScaler().fit_transform(w_ary)
@@ -43,6 +44,11 @@ def main():
     groups.append(["V{}".format(x) for x in range(217, 278+1)])
     groups.append(["V{}".format(x) for x in range(279, 321+1)])
     groups.append(["V{}".format(x) for x in range(322, 339+1)])
+
+    for group in groups:
+        df_train, df_test = apply_PCA(df_train, df_test,
+                                      target_cols=group,
+                                      n_components=3)
 
     df_train = df_train[[x for x in df_train.columns if x not in original_features]]
     df_test = df_test[[x for x in df_test.columns if x not in original_features]]
