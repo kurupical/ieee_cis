@@ -122,20 +122,28 @@ def identify_id(df):
         else:
             return x["D1"]
 
+    def nan_addr1_addr2(x):
+        if np.isnan(x["addr1"]) and np.isnan(x["addr2"]):
+            return np.nan
+        else:
+            return x["TEMP__uid3"]
+
     print(sys._getframe().f_code.co_name)
     df["TEMP__D1_zero_to_D10"] = df[["D1", "D10"]].apply(d1_zero_to_d10, axis=1)
 
     df["TEMP__uid"] = df['card1'].astype(str)+'_'+df['card2'].astype(str)
     df["TEMP__uid2"] = df["TEMP__uid"].astype(str)+"_"+df['card3'].astype(str)+'_'+df['card5'].astype(str)+"_"# +df["P_emaildomain"].astype(str)
     df["TEMP__uid3"] = df["TEMP__uid2"].astype(str) + "_" + df['addr1'].fillna("none").astype(str) + '_' + df['addr2'].fillna("none").astype(str)
+    df["TEMP__uid3"] = df[["addr1", "addr2", "TEMP__uid3"]].apply(nan_addr1_addr2, axis=1).astype(str)
+
     df["TEMP__uid4"] = (df["V160"] - df["V159"]).astype(str)
     df["TEMP__uid5"] = df["addr2"].astype(str)+"_"+df["id_14"].astype(str)+"_"+df["id_19"].astype(str)+df["id_20"].astype(str)+df["P_emaildomain"].astype(str)
     df["TEMP__uid2+DT"] = df["TEMP__uid2"].astype(str) + "_" + (df["TEMP__DT_D"] - df["D1"]).astype(str)
     df["TEMP__uid3+DT"] = df["TEMP__uid3"].astype(str) + "_" + (df["TEMP__DT_D"] - df["D1"]).astype(str)
     # df["TEMP__uid2+DT"] = df["TEMP__uid2"].astype(str) + "_" + (df["TEMP__DT_D"] - df["TEMP__D1_zero_to_D10"]).astype(str)
     # df["TEMP__uid3+DT"] = df["TEMP__uid3"].astype(str) + "_" + (df["TEMP__DT_D"] - df["TEMP__D1_zero_to_D10"]).astype(str)
-    df["TEMP__uid2+DT2"] = df["TEMP__uid2+DT"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D10"]).fillna("none").astype(str)
-    df["TEMP__uid3+DT2"] = df["TEMP__uid3+DT"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D10"]).fillna("none").astype(str)
+    df["TEMP__uid2+DT2"] = df["TEMP__uid2+DT"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D10"]).astype(str)
+    df["TEMP__uid3+DT2"] = df["TEMP__uid3+DT"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D10"]).astype(str)
     df["TEMP__uid4+DT"] = df["TEMP__uid4"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D1"]).astype(str)
     df["TEMP__uid5+DT"] = df["TEMP__uid5"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D1"]).astype(str)
     df["TEMP__uid2+DT+D"] = df["TEMP__uid2"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D1"]).astype(str)+"_"+df["TEMP__DT_D"].astype(str)
@@ -166,6 +174,10 @@ def identify_id(df):
     print("**DEBUG**")
     print(df["TEMP__uid2+DT"].value_counts())
     print(df["TEMP__uid3+DT"].value_counts())
+
+    assert np.all(df[df["D10"].isnull()]["TEMP__uid3+DT2"].isnull())
+    assert np.all(df[df["addr1"].isnull() & df["addr2"].isnull()]["TEMP__uid3"].isnull())
+    assert not np.all(df[df["addr1"].isnull()]["TEMP__uid3"].isnull())
 
     return df
 
@@ -207,8 +219,8 @@ def main():
     df_train = get_decimal(df_train)
     df_test = get_decimal(df_test)
 
-    df_train = reduce_mem_usage(df_train, mode="save")
-    df_test = reduce_mem_usage(df_test, mode="save")
+    # df_train = reduce_mem_usage(df_train, mode="save")
+    # df_test = reduce_mem_usage(df_test, mode="save")
 
     df_test = fix_data_existing_only_test(df_test)
 
