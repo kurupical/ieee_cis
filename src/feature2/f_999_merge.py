@@ -48,6 +48,7 @@ def main(merge_features=None, nrows=None, drop_cols=None, fillna=False):
         merge_features.extend(glob.glob("../../data/108_pattern/train/*.feather"))
         merge_features.extend(glob.glob("../../data/109_rolling/train/*.feather"))
         merge_features.extend(glob.glob("../../data/110_nan_pattern/train/*.feather"))
+        merge_features.extend(glob.glob("../../data/111_W_D1is0/train/*.feather"))
 
         merge_features = [x.replace("train", "{}") for x in merge_features]
 
