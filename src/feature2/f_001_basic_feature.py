@@ -128,8 +128,15 @@ def identify_id(df):
         else:
             return x["TEMP__uid3"]
 
+    def d10_d12(x):
+        if x["ProductCD"] == "C":
+            return x["D12"]
+        else:
+            return x["D10"]
+
     print(sys._getframe().f_code.co_name)
     df["TEMP__D1_zero_to_D10"] = df[["D1", "D10"]].apply(d1_zero_to_d10, axis=1)
+    df["TEMP__D10_D12"] = df[["D10", "D12", "ProductCD"]].apply(d10_d12, axis=1)
 
     df["TEMP__uid"] = df['card1'].astype(str)+'_'+df['card2'].astype(str)
     df["TEMP__uid2"] = df["TEMP__uid"].astype(str)+"_"+df['card3'].astype(str)+'_'+df['card5'].astype(str)+"_"# +df["P_emaildomain"].astype(str)
@@ -144,6 +151,8 @@ def identify_id(df):
     # df["TEMP__uid3+DT"] = df["TEMP__uid3"].astype(str) + "_" + (df["TEMP__DT_D"] - df["TEMP__D1_zero_to_D10"]).astype(str)
     df["TEMP__uid2+DT2"] = df["TEMP__uid2+DT"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D10"]).fillna("none").astype(str)
     df["TEMP__uid3+DT2"] = df["TEMP__uid3+DT"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D10"]).fillna("none").astype(str)
+    df["TEMP__uid2+DT3"] = df["TEMP__uid2"].astype(str) + "_" + (df["TEMP__DT_D"] - df["TEMP__D10_D12"]).astype(str)
+    df["TEMP__uid3+DT3"] = df["TEMP__uid3"].astype(str) + "_" + (df["TEMP__DT_D"] - df["TEMP__D10_D12"]).astype(str)
     df["TEMP__uid2+DT+D"] = df["TEMP__uid2"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D1"]).astype(str)+"_"+df["TEMP__DT_D"].astype(str)
     df["TEMP__uid2+DT+W"] = df["TEMP__uid2"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D1"]).astype(str)+"_"+df["TEMP__DT_W"].astype(str)
     df["TEMP__uid2+DT+H"] = df["TEMP__uid2"].astype(str)+"_"+(df["TEMP__DT_D"]-df["D1"]).astype(str)+"_"+df["TEMP__DT_H"].astype(str)
@@ -156,6 +165,7 @@ def identify_id(df):
     for col in ["TEMP__uid", "TEMP__uid2", "TEMP__uid3",
                 "TEMP__uid2+DT", "TEMP__uid3+DT",
                 "TEMP__uid2+DT2", "TEMP__uid3+DT2",
+                "TEMP__uid2+DT3", "TEMP__uid3+DT3",
                 "TEMP__uid2+DT+D", "TEMP__uid2+DT+W", "TEMP__uid2+DT+H",
                 "TEMP__uid3+DT+D", "TEMP__uid3+DT+W", "TEMP__uid3+DT+H",
                 "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"]:
