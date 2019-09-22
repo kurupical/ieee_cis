@@ -34,7 +34,7 @@ def main(merge_features=None, nrows=None, drop_cols=None, fillna=False):
         merge_features = []
         merge_features = glob.glob("../../data/101_agg_id/train/*.feather")
         merge_features.extend(glob.glob("../../data/102_countencoding/train/*.feather"))
-        merge_features.extend(glob.glob("../../data/103_pattern/train/*.feather"))
+        # merge_features.extend(glob.glob("../../data/103_pattern/train/*.feather"))
         merge_features.extend(glob.glob("../../data/104_pattern/train/*.feather"))
         merge_features.extend(glob.glob("../../data/104_1_agg_id/train/*.feather"))
         merge_features.extend(glob.glob("../../data/105_pca/train/*.feather"))
@@ -42,6 +42,8 @@ def main(merge_features=None, nrows=None, drop_cols=None, fillna=False):
         # merge_features.extend(glob.glob("../../data/106_shift/train/*.feather"))
         merge_features.extend(glob.glob("../../data/108_pattern/train/*.feather"))
         merge_features.extend(glob.glob("../../data/109_rolling/train/*.feather"))
+        merge_features.extend(glob.glob("../../data/110_nan_pattern/train/*.feather"))
+
         merge_features = [x.replace("train", "{}") for x in merge_features]
 
     train_idx = np.arange(590540)
@@ -49,7 +51,8 @@ def main(merge_features=None, nrows=None, drop_cols=None, fillna=False):
     df_train = pd.read_feather("../../data/baseline/train/baseline.feather")
     if nrows is not None:
         train_idx = np.sort(np.concatenate([df_train[df_train["isFraud"]==1].index.to_list(),
-                                            np.random.choice(train_idx, nrows, replace=False)]))
+                                            np.random.choice(df_train[df_train["isFraud"]==0].index, nrows, replace=False)]))
+        # test_idx = np.sort(np.random.choice(test_idx, nrows, replace=False))
         test_idx = np.sort(np.random.choice(test_idx, 100, replace=False))
     # print(f)
     df_train = df_train.iloc[train_idx]
