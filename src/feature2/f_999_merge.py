@@ -53,7 +53,7 @@ def main(merge_features=None, nrows=None, drop_cols=None, fillna=False):
         train_idx = np.sort(np.concatenate([df_train[df_train["isFraud"]==1].index.to_list(),
                                             np.random.choice(df_train[df_train["isFraud"]==0].index, nrows, replace=False)]))
         # test_idx = np.sort(np.random.choice(test_idx, nrows, replace=False))
-        test_idx = np.sort(np.random.choice(test_idx, 100, replace=False))
+        test_idx = np.sort(np.random.choice(test_idx, 1000, replace=False))
     # print(f)
     df_train = df_train.iloc[train_idx]
     dfs = [df_train]
