@@ -42,14 +42,14 @@ def datefeature(df):
     df['D9'] = np.where(df['D9'].isna(), 0, 1)
     return df
 
-def remove_minor_cat(df_train, df_test, target_cols):
+def remove_minor_cat(df_train, df_test, target_cols, valid=2):
 
     # https://www.kaggle.com/kyakovlev/ieee-gb-2-make-amount-useful-again
     print(sys._getframe().f_code.co_name)
     for col in target_cols:
         valid_card = pd.concat([df_train[[col]], df_test[[col]]])
         valid_card = valid_card[col].value_counts()
-        valid_card = valid_card[valid_card > 2]
+        valid_card = valid_card[valid_card > valid]
         valid_card = list(valid_card.index)
 
         # df_train[col] = np.where(df_train[col].isin(df_test[col]), df_train[col], np.nan)
@@ -149,6 +149,8 @@ def identify_id(df):
     df["TEMP__uid2+nanpt"] = df["TEMP__uid2"].astype(str) + "_" + df["nan_pattern_M"].fillna("none").astype(str) + "_" + df["nan_pattern_V"].fillna("none").astype(str)
     df["TEMP__uid2+DT"] = df["TEMP__uid2"].astype(str) + "_" + (df["TEMP__DT_D"] - df["D1"]).astype(str)
     df["TEMP__uid3+DT"] = df["TEMP__uid3"].astype(str) + "_" + (df["TEMP__DT_D"] - df["D1"]).astype(str)
+    df["TEMP__uid4+DT"] = df["TEMP__uid4"].astype(str) + "_" + (df["TEMP__DT_D"] - df["D1"]).astype(str)
+    df["TEMP__uid5+DT"] = df["TEMP__uid5"].astype(str) + "_" + (df["TEMP__DT_D"] - df["D1"]).astype(str)
     df["TEMP__uid2+dist+DT"] = df["TEMP__uid2+dist"].astype(str) + "_" + (df["TEMP__DT_D"] - df["D1"]).astype(str)
     df["TEMP__uid2+nanpt+DT"] = df["TEMP__uid2+nanpt"].astype(str) + "_" + (df["TEMP__DT_D"] - df["D1"]).astype(str)
     # df["TEMP__uid2+DT"] = df["TEMP__uid2"].astype(str) + "_" + (df["TEMP__DT_D"] - df["TEMP__D1_zero_to_D10"]).astype(str)
@@ -220,6 +222,17 @@ def get_decimal(df):
     df["AMT_Decimal_keta"] = [str(len(x)-2) for x in df["AMT_Decimal"].values]
     return df
 
+def identify_id_to_use(df_train, df_test):
+    print(sys._getframe().f_code.co_name)
+    cols = ["uid2+DT", "uid2+DT3", "uid5"]
+    for col in cols:
+        df_train[col] = df_train["TEMP__{}".format(col)]
+        df_test[col] = df_test["TEMP__{}".format(col)]
+
+    remove_minor_cat(df_train, df_test, target_cols=cols, valid=10)
+
+    return df_train, df_test
+
 def main(is_debug=False):
     df_train = pd.read_feather("../../data/original/train_all.feather")
     df_test = pd.read_feather("../../data/original/test_all.feather")
@@ -250,6 +263,8 @@ def main(is_debug=False):
 
     df_train = identify_id(df_train)
     df_test = identify_id(df_test)
+
+    df_train, df_test = identify_id_to_use(df_train, df_test)
 
     df_train = make_C_D_feature(df_train)
     df_test = make_C_D_feature(df_test)
