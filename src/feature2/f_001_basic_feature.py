@@ -224,8 +224,12 @@ def main(is_debug=False):
     df_train = pd.read_feather("../../data/original/train_all.feather")
     df_test = pd.read_feather("../../data/original/test_all.feather")
 
-    df_train = pd.merge(df_train, pd.read_feather("../../data/110_nan_pattern/train/nan.feather"), how="left", on="TransactionID")
-    df_test = pd.merge(df_test, pd.read_feather("../../data/110_nan_pattern/test/nan.feather"), how="left", on="TransactionID")
+    df_train = pd.concat([df_train, pd.read_feather("../../data/110_nan_pattern/train/nan.feather")], axis=1)
+    df_test = pd.concat([df_test, pd.read_feather("../../data/110_nan_pattern/test/nan.feather")], axis=1)
+
+    if is_debug:
+        df_train = df_train.head(200)
+        df_test = df_test.head(200)
 
     df_train = get_decimal(df_train)
     df_test = get_decimal(df_test)
@@ -260,9 +264,6 @@ def main(is_debug=False):
     print(df_train.head(5))
     print("test shape: {}".format(df_test.shape))
     print(df_test.tail(5))
-    if is_debug:
-        df_train = df_train.head(200)
-        df_test = df_test.head(200)
     df_train.to_feather("../../data/baseline/train/baseline.feather")
     df_test.to_feather("../../data/baseline/test/baseline.feather")
 
