@@ -59,7 +59,7 @@ def main(data_train_dirs, data_submit_dirs=None, experiment_name="blending", max
     study = optuna.create_study()
     f = partial(objective, df.drop(["TransactionID", "y"], axis=1), df["y"].values)
 
-    study.optimize(f, n_trials=1000)
+    study.optimize(f, n_trials=3)
     print("params: {}".format(study.best_params))
 
     df_result = pd.read_csv("../../data/original/sample_submission.csv")[["TransactionID"]]
@@ -76,9 +76,13 @@ def main(data_train_dirs, data_submit_dirs=None, experiment_name="blending", max
     out_params = study.best_params
     out_params["score"] = study.best_value
 
+    df["isFraud"] = calc_weight(df.drop(["TransactionID", "y"], axis=1), study.best_params)
+    print(study.best_value)
+    print(df["isFraud"])
     with open("{}/weights.json".format(output_dir), "w") as f:
-        json.dump(study.best_params, f)
-    df_result[["TransactionID", "isFraud"]].to_csv("{}/blending.csv".format(output_dir))
+        json.dump(out_params, f)
+    df[["TransactionID", "isFraud"]].to_csv("{}/blending_train.csv".format(output_dir), index=False)
+    df_result[["TransactionID", "isFraud"]].to_csv("{}/blending.csv".format(output_dir), index=False)
 
 
 if __name__ == "__main__":
@@ -97,8 +101,8 @@ if __name__ == "__main__":
                         "../../output/★20190915_lgbmALL+W+C/20190915175055/submit.csv"]
     """
 
-    data_train_dirs = glob("../../output/★20190927_lgbmALL/*/predict_train.csv")
-    data_submit_dirs = glob("../../output/★20190927_lgbmALL/*/submit.csv")
+    data_train_dirs = glob("../../output/★20190918_lgbmALL+kfold/*/predict_train.csv")
+    data_submit_dirs = glob("../../output/★20190918_lgbmALL+kfold/*/submit.csv")
     print(len(data_train_dirs))
     print(len(data_submit_dirs))
 

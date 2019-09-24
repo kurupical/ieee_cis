@@ -52,7 +52,7 @@ def id_aggregates(df_train, df_test, agg_cols, target_cols, agg_types):
                 df_train, df_test = _agg(df_train, df_test, agg_col, target_col, agg_type)
     return df_train, df_test
 
-def main():
+def main(agg_cols=None, number=0):
     df_train = pd.read_feather("../../data/baseline/train/baseline.feather")
     df_train = pd.concat([df_train,
                           pd.read_feather("../../data/104_pattern/train/pattern.feather")], axis=1)
@@ -62,10 +62,13 @@ def main():
 
     original_features = df_train.columns
 
-    agg_cols = ["TEMP__uid2+DT", "TEMP__uid3+DT",
-                "TEMP__uid2+DT2", "TEMP__uid3+DT2",
-                "TEMP__uid2+DT3", "TEMP__uid3+DT3",
-                "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"]
+    if agg_cols is None:
+        agg_cols = ["TEMP__uid2+DT", "TEMP__uid3+DT",
+                    "TEMP__uid2+DT2", "TEMP__uid3+DT2",
+                    "TEMP__uid2+DT3", "TEMP__uid3+DT3",
+                    "TEMP__uid2+dist+DT", "TEMP__uid2+nanpt+DT",
+                    "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"]
+
     target_cols = [x for x in df_train.columns if "div" not in x and "std" in x]
     df_train, df_test = id_aggregates(df_train, df_test,
                                       agg_cols=agg_cols,
@@ -82,9 +85,16 @@ def main():
     print(df_test.head(5))
     print(df_test.describe())
 
-    df_train.reset_index(drop=True).to_feather("../../data/104_1_agg_id/train/agg.feather")
-    df_test.reset_index(drop=True).to_feather("../../data/104_1_agg_id/test/agg.feather")
+    df_train.reset_index(drop=True).to_feather("../../data/104_1_agg_id/train/agg_{}.feather".format(number))
+    df_test.reset_index(drop=True).to_feather("../../data/104_1_agg_id/test/agg_{}.feather".format(number))
 
 if __name__ == "__main__":
     print(os.path.basename(__file__))
-    main()
+    agg_cols = ["TEMP__uid2+DT", "TEMP__uid3+DT",
+                "TEMP__uid2+DT2", "TEMP__uid3+DT2",
+                "TEMP__uid2+DT3", "TEMP__uid3+DT3",
+                "TEMP__uid2+dist+DT", "TEMP__uid2+nanpt+DT",
+                "TEMP__uid2+DT+M4", "TEMP__uid3+DT+M4"]
+
+    for i, col in enumerate(agg_cols):
+        main(agg_cols=[col], number=i)

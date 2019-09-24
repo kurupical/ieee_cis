@@ -8,7 +8,7 @@ def main():
     idx = np.arange(len(df))
     train_idx = np.sort(np.random.choice(idx, 30000, replace=False))
     df = df.iloc[train_idx]
-    df_imp = pd.read_csv("../../output/20190916154133_lightgbm_allfeats_108pattern/importance.csv", index_col=0)
+    df_imp = pd.read_csv("../../output/★20190922_baseline/20190923175721_lightgbm_all/importance.csv", index_col=0)
     df_imp["importance"] = df_imp.sum(axis=1)
     df_imp = df_imp.sort_values("importance", ascending=False)
     df = df[[x for x in df_imp["column"].values if x in df.columns]]
@@ -33,7 +33,8 @@ def main():
         feats.extend([x for x in cat_cols if x not in feats])
         return feats
 
-    df = df.corr().to_csv("corr.csv")
+    print("CALCULATION CORR")
+    df.corr().to_csv("corr.csv")
 """
 cols = [x for x in df.columns if x not in _get_categorical_features(df)]
 result = []

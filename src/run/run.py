@@ -3,7 +3,7 @@ import lightgbm as lgb
 import os
 import numpy as np
 from datetime import datetime as dt
-from sklearn.model_selection import StratifiedKFold, KFold
+from sklearn.model_selection import StratifiedKFold, KFold, TimeSeriesSplit
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import roc_auc_score
 import copy
@@ -99,7 +99,15 @@ def learning_lgbm(df_train, df_test, params, extract_feature, folds):
     df_importance = pd.DataFrame()
     df_result = pd.DataFrame()
     df_importance["column"] = df_train.drop([id_col, target_col], axis=1).columns
-    for n_fold, (train_idx, val_idx) in enumerate(folds.split(df_train, df_train[target_col])):
+    final_iteration = 0
+
+    idxs = []
+    for idx in folds.split(df_train, df_train[target_col]):
+        idxs.append(idx)
+    if folds.__class__ == TimeSeriesSplit:
+        idxs.append((np.arange(len(df_train)), np.arange(len(df_train))[-100:]))
+
+    for n_fold, (train_idx, val_idx) in enumerate(idxs):
         print("-----------------------------------")
         print("Fold {} / {}".format(n_fold+1, n_folds))
         print("-----------------------------------")
@@ -111,22 +119,17 @@ def learning_lgbm(df_train, df_test, params, extract_feature, folds):
         # if n_fold == 4: continue
         print(train_idx)
         print(val_idx)
-        features_check = []
 
-        if not extract_feature:
-            check_cols = [x for x in df_test.drop(["TransactionID"], axis=1).columns if x not in cat_feats]
-            for col in check_cols:
-                features_check.append(ks_2samp(df_train.iloc[train_idx][col], df_test[col])[1])
-
-            features_check = pd.Series(features_check, index=check_cols).sort_values()
-            drop_cols = features_check[features_check<0.001].index
-            print("drop: {}".format(len(drop_cols)))
-            print(drop_cols)
-            df_train = df_train.drop(drop_cols, axis=1)
-            df_test = df_test.drop(drop_cols, axis=1)
         if extract_feature:
-            if n_fold != 0:
+            if n_fold != 4:
                 continue
+
+        if folds.__class__ == TimeSeriesSplit:
+            if n_fold < 3:
+                continue
+            if n_fold == 5:
+                params["n_estimators"] = final_iteration * 1.1
+                params["early_stopping_rounds"] = 10000  # disable
 
         lgb_train = lgb.Dataset(data=df_train.drop([id_col, target_col], axis=1).iloc[train_idx], label=df_train[target_col].iloc[train_idx])
         lgb_val = lgb.Dataset(data=df_train.drop([id_col, target_col], axis=1).iloc[val_idx], label=df_train[target_col].iloc[val_idx])
@@ -136,7 +139,7 @@ def learning_lgbm(df_train, df_test, params, extract_feature, folds):
                           categorical_feature=cat_feats,
                           valid_sets=[lgb_train, lgb_val],
                           verbose_eval=100)
-
+        final_iteration = model.current_iteration()
         w_pred_train = model.predict(df_train.drop([id_col, target_col], axis=1).iloc[val_idx])
         df_pred_train = df_pred_train.append(pd.DataFrame(
             {id_col: df_train[id_col].iloc[val_idx],
@@ -146,10 +149,13 @@ def learning_lgbm(df_train, df_test, params, extract_feature, folds):
         w_pred_test = model.predict(df_test.drop([id_col], axis=1))
         print(w_pred_test.mean())
         df_pred_test["pred_fold{}_{}".format(i, n_fold)] = w_pred_test
-        df_importance["fold{}_{}_gain".format(i, n_fold)] = \
+        w_df_importance = pd.DataFrame()
+        w_df_importance["column"] = df_train.drop([id_col, target_col], axis=1).columns
+        w_df_importance["fold{}_{}_gain".format(i, n_fold)] = \
             model.feature_importance(importance_type="gain") / model.feature_importance(importance_type="gain").sum()
-        df_importance["fold{}_{}_split".format(i, n_fold)] = \
+        w_df_importance["fold{}_{}_split".format(i, n_fold)] = \
             model.feature_importance(importance_type="split") / model.feature_importance(importance_type="split").sum()
+        df_importance = pd.merge(df_importance, w_df_importance, how="left", on="column").fillna(0)
         df_result = df_result.append(
             pd.DataFrame(
                 {"fold": [n_fold],
@@ -164,7 +170,11 @@ def learning_lgbm(df_train, df_test, params, extract_feature, folds):
 
     df_submit = pd.DataFrame()
     df_submit[id_col] = df_test[id_col]
-    df_submit[target_col] = df_pred_test.drop(id_col, axis=1).mean(axis=1)
+    if folds.__class__ == TimeSeriesSplit:
+        weights = [0.05, 0.15, 0.3, 0.5]
+        df_submit[target_col] = df_pred_test.drop(id_col, axis=1).mul(weights).sum(axis=1)
+    else:
+        df_submit[target_col] = df_pred_test.drop(id_col, axis=1).mean(axis=1)
     return df_submit, df_pred_train, df_pred_test, df_importance, df_result
 
 
@@ -280,6 +290,12 @@ def main(query=None, params=None, experiment_name="", mode="lightgbm", extract_f
     print("load test dataset")
     df_test = pd.read_feather("../../data/merge/test_merge.feather").drop(remove_cols, axis=1, errors="ignore")
 
+    allnull_test = df_test.isnull().sum()
+    allnull_test = allnull_test[allnull_test == len(df_test)].index
+
+    print(allnull_test)
+    df_train = df_train.drop(allnull_test, axis=1)
+    df_test = df_test.drop(allnull_test, axis=1)
     if select_cols is not None:
         df_train = df_train[list(select_cols) + [target_col] + [id_col]]
         df_test = df_test[list(select_cols) + [id_col]]

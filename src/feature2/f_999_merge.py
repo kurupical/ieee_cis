@@ -47,7 +47,7 @@ def main(merge_features=None, nrows=None, drop_cols=None, fillna=False):
         # merge_features.extend(glob.glob("../../data/106_shift/train/*.feather"))
         merge_features.extend(glob.glob("../../data/108_pattern/train/*.feather"))
         merge_features.extend(glob.glob("../../data/109_rolling/train/*.feather"))
-        merge_features.extend(glob.glob("../../data/110_nan_pattern/train/*.feather"))
+        # merge_features.extend(glob.glob("../../data/110_nan_pattern/train/*.feather")) # 001に含まれる
         merge_features.extend(glob.glob("../../data/111_W_D1is0/train/*.feather"))
 
         merge_features = [x.replace("train", "{}") for x in merge_features]
@@ -65,6 +65,9 @@ def main(merge_features=None, nrows=None, drop_cols=None, fillna=False):
     dfs = [df_train]
     if drop_cols is None:
         drop_cols = pd.read_csv("../feature2/cols.csv")["column"].values
+    else:
+        drop_cols = np.concatenate([drop_cols, pd.read_csv("../feature2/cols.csv")["column"].values], axis=0)
+    drop_cols = [x for x in drop_cols if x !="DT_isDecember" and x != "D1" and x != "ProductCD"]
     dfs.extend([pd.read_feather(x.format("train")).iloc[train_idx].drop(drop_cols, axis=1, errors="ignore") for x in merge_features])
     df_train = pd.concat(dfs, axis=1)
     if fillna:

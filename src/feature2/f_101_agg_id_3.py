@@ -119,7 +119,7 @@ def main(target_cols, name):
 
 if __name__ == "__main__":
     print(os.path.basename(__file__))
-    for i in range(2, 10):
+    for i in range(10):
         print("\n\n\n\n\n *********** DIV = {} ************".format(i))
         main(target_cols=["V{}".format(x) for x in range(1, 339+1) if x%10 == i],
              name="div{}".format(i))

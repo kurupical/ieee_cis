@@ -224,13 +224,16 @@ def get_decimal(df):
 
 def identify_id_to_use(df_train, df_test):
     print(sys._getframe().f_code.co_name)
-    cols = ["uid2+DT", "uid2+DT3", "uid5"]
+    cols = ["uid2+DT", "uid2+DT3", "uid5+DT"]
     for col in cols:
         df_train[col] = df_train["TEMP__{}".format(col)]
         df_test[col] = df_test["TEMP__{}".format(col)]
 
-    remove_minor_cat(df_train, df_test, target_cols=cols, valid=10)
+    for col in cols:
+        df_train[col] = np.where(df_train[col].isin(df_test[col]), df_train[col], np.nan)
+        df_test[col] = np.where(df_test[col].isin(df_train[col]), df_test[col], np.nan)
 
+    print(df_train)
     return df_train, df_test
 
 def main(is_debug=False):
