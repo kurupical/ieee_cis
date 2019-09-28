@@ -52,8 +52,8 @@ def _get_categorical_features(df):
 def learning_lgbm(df_train, df_test, params, extract_feature, folds):
 
     if params is None:
-        params = {'num_leaves': 256,
-                  'min_child_samples': 200,
+        params = {'num_leaves': 380,
+                  'min_child_samples': 100,
                   'objective': 'binary',
                   'max_depth': -1,
                   'learning_rate': 0.01,
@@ -62,8 +62,8 @@ def learning_lgbm(df_train, df_test, params, extract_feature, folds):
                   "bagging_seed": 11,
                   "metric": 'auc',
                   "verbosity": -1,
-                  'reg_alpha': 1,
-                  'reg_lambda': 1,
+                  'reg_alpha': 0.1,
+                  'reg_lambda': 0.1,
                   'colsample_bytree': 0.05,
                   'early_stopping_rounds': 200,
                   'n_estimators': 20000,
@@ -140,6 +140,8 @@ def learning_lgbm(df_train, df_test, params, extract_feature, folds):
                           valid_sets=[lgb_train, lgb_val],
                           verbose_eval=100)
         final_iteration = model.current_iteration()
+        del lgb_train, lgb_val
+        gc.collect()
         w_pred_train = model.predict(df_train.drop([id_col, target_col], axis=1).iloc[val_idx])
         df_pred_train = df_pred_train.append(pd.DataFrame(
             {id_col: df_train[id_col].iloc[val_idx],
@@ -156,22 +158,23 @@ def learning_lgbm(df_train, df_test, params, extract_feature, folds):
         w_df_importance["fold{}_{}_split".format(i, n_fold)] = \
             model.feature_importance(importance_type="split") / model.feature_importance(importance_type="split").sum()
         df_importance = pd.merge(df_importance, w_df_importance, how="left", on="column").fillna(0)
-        df_result = df_result.append(
-            pd.DataFrame(
-                {"fold": [n_fold],
-                 "random_state": [random_state],
-                 "auc_train": [roc_auc_score(df_train[target_col].iloc[train_idx], model.predict(df_train.drop([id_col, target_col], axis=1).iloc[train_idx]))],
-                 "auc_test": [roc_auc_score(df_train[target_col].iloc[val_idx], w_pred_train)]}
-            ),
-            ignore_index=True
-        )
-        del w_pred_train, w_pred_test, lgb_train, lgb_val, model
+        if n_fold < 6: # timeseriessplit対策. なぜかmemory errorになるので…
+            df_result = df_result.append(
+                pd.DataFrame(
+                    {"fold": [n_fold],
+                     "random_state": [random_state],
+                     "auc_train": [roc_auc_score(df_train[target_col].iloc[train_idx], model.predict(df_train.drop([id_col, target_col], axis=1).iloc[train_idx]))],
+                     "auc_test": [roc_auc_score(df_train[target_col].iloc[val_idx], w_pred_train)]}
+                ),
+                ignore_index=True
+            )
+        del w_pred_train, w_pred_test, model
         gc.collect()
 
     df_submit = pd.DataFrame()
     df_submit[id_col] = df_test[id_col]
     if folds.__class__ == TimeSeriesSplit:
-        weights = [0.05, 0.15, 0.3, 0.5]
+        weights = [0.1, 0.1, 0.25, 0.55]
         df_submit[target_col] = df_pred_test.drop(id_col, axis=1).mul(weights).sum(axis=1)
     else:
         df_submit[target_col] = df_pred_test.drop(id_col, axis=1).mean(axis=1)
@@ -323,7 +326,8 @@ def main(query=None, params=None, experiment_name="", mode="lightgbm", extract_f
                                                                     params=params,
                                                                     extract_feature=extract_feature,
                                                                     folds=folds)
-
+    del df_train, df_test
+    gc.collect()
     df_submit = df_submit.append(sub, ignore_index=True)
     df_pred_train = df_pred_train.append(pred_train, ignore_index=True)
     df_pred_test = df_pred_test.append(pred_test, ignore_index=True)

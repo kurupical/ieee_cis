@@ -59,7 +59,7 @@ def main(data_train_dirs, data_submit_dirs=None, experiment_name="blending", max
     study = optuna.create_study()
     f = partial(objective, df.drop(["TransactionID", "y"], axis=1), df["y"].values)
 
-    study.optimize(f, n_trials=3)
+    study.optimize(f, n_trials=1000)
     print("params: {}".format(study.best_params))
 
     df_result = pd.read_csv("../../data/original/sample_submission.csv")[["TransactionID"]]
@@ -101,8 +101,8 @@ if __name__ == "__main__":
                         "../../output/★20190915_lgbmALL+W+C/20190915175055/submit.csv"]
     """
 
-    data_train_dirs = glob("../../output/★20190918_lgbmALL+kfold/*/predict_train.csv")
-    data_submit_dirs = glob("../../output/★20190918_lgbmALL+kfold/*/submit.csv")
+    data_train_dirs = glob("../../output/★20190925_baseline2/*/predict_train.csv")
+    data_submit_dirs = glob("../../output/★20190925_baseline2/*/submit.csv")
     print(len(data_train_dirs))
     print(len(data_submit_dirs))
 
