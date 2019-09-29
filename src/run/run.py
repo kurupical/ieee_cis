@@ -127,7 +127,7 @@ def learning_lgbm(df_train, df_test, params, extract_feature, folds):
         if folds.__class__ == TimeSeriesSplit:
             if n_fold < 3:
                 continue
-            if n_fold == 5:
+            if n_fold == 6:
                 params["n_estimators"] = final_iteration * 1.1
                 params["early_stopping_rounds"] = 10000  # disable
 
@@ -217,7 +217,14 @@ def learning_catboost(df_train, df_test, params, extract_feature, folds):
     df_importance = pd.DataFrame()
     df_result = pd.DataFrame()
     df_importance["column"] = df_train.drop([id_col, target_col], axis=1).columns
-    for n_fold, (train_idx, val_idx) in enumerate(folds.split(df_train, y=df_train[target_col])):
+    idxs = []
+    for idx in folds.split(df_train, df_train[target_col]):
+        idxs.append(idx)
+    if folds.__class__ == TimeSeriesSplit:
+        idxs.append((np.arange(len(df_train)), np.arange(len(df_train))[-100:]))
+
+    final_iteration = 0
+    for n_fold, (train_idx, val_idx) in enumerate(idxs):
         print("-----------------------------------")
         print("Fold {} / {}".format(n_fold+1, n_folds))
         print("-----------------------------------")
@@ -227,9 +234,15 @@ def learning_catboost(df_train, df_test, params, extract_feature, folds):
         # if n_fold == 1: continue
         # if n_fold == 2: continue
         # if n_fold == 4: continue
-
+        if folds.__class__ == TimeSeriesSplit:
+            if n_fold < 3:
+                continue
+            if n_fold == 6:
+                params["n_estimators"] = final_iteration
+                params["od_wait"] = 10000  # disable
+        print(params)
         model = CatBoostClassifier(**params)
-
+        final_iteration = model.best_iteration_
         model.fit(df_train.drop([id_col, target_col], axis=1).iloc[train_idx],
                   df_train[target_col].iloc[train_idx],
                   cat_features=cat_feats,
@@ -244,21 +257,24 @@ def learning_catboost(df_train, df_test, params, extract_feature, folds):
         w_pred_test = model.predict_proba(df_test.drop([id_col], axis=1))[:, 1]
         print(w_pred_test.mean())
         df_pred_test["pred_fold{}_{}".format(i, n_fold)] = w_pred_test
+        df_pred_train.to_csv("predict_train.csv")
+        df_pred_test.to_csv("predict_test.csv")
         """
         df_importance["fold{}_{}_gain".format(i, n_fold)] = \
             model.feature_importance(importance_type="gain") / model.feature_importance(importance_type="gain").sum()
         df_importance["fold{}_{}_split".format(i, n_fold)] = \
             model.feature_importance(importance_type="split") / model.feature_importance(importance_type="split").sum()
         """
-        df_result = df_result.append(
-            pd.DataFrame(
-                {"fold": [n_fold],
-                 "random_state": [random_state],
-                 "auc_train": [roc_auc_score(df_train[target_col].iloc[train_idx], model.predict_proba(df_train.drop([id_col, target_col], axis=1).iloc[train_idx])[:, 1])],
-                 "auc_test": [roc_auc_score(df_train[target_col].iloc[val_idx], w_pred_train)]}
-            ),
-            ignore_index=True
-        )
+        if n_fold < 6: # timeseriessplit対策. なぜかmemory errorになるので…
+            df_result = df_result.append(
+                pd.DataFrame(
+                    {"fold": [n_fold],
+                     "random_state": [random_state],
+                     "auc_train": [roc_auc_score(df_train[target_col].iloc[train_idx], model.predict_proba(df_train.drop([id_col, target_col], axis=1).iloc[train_idx])[:, 1])],
+                     "auc_test": [roc_auc_score(df_train[target_col].iloc[val_idx], w_pred_train)]}
+                ),
+                ignore_index=True
+            )
         del w_pred_train, w_pred_test, model
         gc.collect()
 
@@ -267,7 +283,11 @@ def learning_catboost(df_train, df_test, params, extract_feature, folds):
 
     df_submit = pd.DataFrame()
     df_submit[id_col] = df_test[id_col]
-    df_submit[target_col] = df_pred_test.drop(id_col, axis=1).mean(axis=1)
+    if folds.__class__ == TimeSeriesSplit:
+        weights = [0.1, 0.1, 0.25, 0.55]
+        df_submit[target_col] = df_pred_test.drop(id_col, axis=1).mul(weights).sum(axis=1)
+    else:
+        df_submit[target_col] = df_pred_test.drop(id_col, axis=1).mean(axis=1)
     return df_submit, df_pred_train, df_pred_test, df_importance, df_result
 
 
