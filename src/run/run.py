@@ -131,6 +131,7 @@ def learning_lgbm(df_train, df_test, params, extract_feature, folds):
                 params["n_estimators"] = final_iteration * 1.1
                 params["early_stopping_rounds"] = 10000  # disable
 
+        print(params)
         lgb_train = lgb.Dataset(data=df_train.drop([id_col, target_col], axis=1).iloc[train_idx], label=df_train[target_col].iloc[train_idx])
         lgb_val = lgb.Dataset(data=df_train.drop([id_col, target_col], axis=1).iloc[val_idx], label=df_train[target_col].iloc[val_idx])
 
@@ -235,11 +236,14 @@ def learning_catboost(df_train, df_test, params, extract_feature, folds):
         # if n_fold == 2: continue
         # if n_fold == 4: continue
         if folds.__class__ == TimeSeriesSplit:
-            if n_fold < 3:
+            if n_fold < 6:
                 continue
             if n_fold == 6:
-                params["n_estimators"] = final_iteration
-                params["od_wait"] = 10000  # disable
+                # if final_iteration is None:
+                #     final_iteration = 12000
+                params["n_estimators"] = 6000 # final_iteration
+                params["od_wait"] = 6000  # disable
+                params["use_best_model"] = False
         print(params)
         model = CatBoostClassifier(**params)
         final_iteration = model.best_iteration_
@@ -247,6 +251,7 @@ def learning_catboost(df_train, df_test, params, extract_feature, folds):
                   df_train[target_col].iloc[train_idx],
                   cat_features=cat_feats,
                   eval_set=(df_train.drop([id_col, target_col], axis=1).iloc[val_idx], df_train[target_col].iloc[val_idx]))
+        print(model.best_iteration_)
 
         w_pred_train = model.predict_proba(df_train.drop([id_col, target_col], axis=1).iloc[val_idx])[:, 1]
         df_pred_train = df_pred_train.append(pd.DataFrame(
@@ -265,16 +270,17 @@ def learning_catboost(df_train, df_test, params, extract_feature, folds):
         df_importance["fold{}_{}_split".format(i, n_fold)] = \
             model.feature_importance(importance_type="split") / model.feature_importance(importance_type="split").sum()
         """
-        if n_fold < 6: # timeseriessplit対策. なぜかmemory errorになるので…
-            df_result = df_result.append(
-                pd.DataFrame(
-                    {"fold": [n_fold],
-                     "random_state": [random_state],
-                     "auc_train": [roc_auc_score(df_train[target_col].iloc[train_idx], model.predict_proba(df_train.drop([id_col, target_col], axis=1).iloc[train_idx])[:, 1])],
-                     "auc_test": [roc_auc_score(df_train[target_col].iloc[val_idx], w_pred_train)]}
-                ),
-                ignore_index=True
-            )
+        print(model.evals_result_)
+        print(model.best_score_)
+        df_result = df_result.append(
+            pd.DataFrame(
+                {"fold": [n_fold],
+                 "random_state": [random_state],
+                 "auc_train": [model.best_score_["learn"]["AUC"]],
+                 "auc_test": [model.best_score_["validation"]["AUC"]]}
+            ),
+            ignore_index=True
+        )
         del w_pred_train, w_pred_test, model
         gc.collect()
 
